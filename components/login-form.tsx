@@ -28,21 +28,21 @@ export function LoginForm() {
 
       if (error) {
         toast({
-          title: "Erro no login",
-          description: error.message || "Credenciais inválidas",
+          title: "No pudimos iniciar la sesión",
+          description: error.message || "Revisa tus credenciales.",
           variant: "destructive",
         })
       } else if (data.user) {
         toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo ao Dashboard WhatsApp",
+          title: "Sesión iniciada",
+          description: "Bienvenido al panel de atención.",
         })
         router.push("/dashboard")
       }
-    } catch (error) {
+    } catch {
       toast({
-        title: "Erro no login",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        title: "No pudimos iniciar la sesión",
+        description: "Ocurrió un error inesperado. Inténtalo nuevamente.",
         variant: "destructive",
       })
     } finally {
@@ -51,13 +51,15 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md rounded-xl border-[#343831] bg-[#1d201c] shadow-none">
       <CardHeader className="text-center">
-        <div className="flex justify-center mb-4">
-          <MessageCircle className="h-12 w-12 text-whatsapp" />
+        <div className="mb-4 flex justify-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-lg border border-[#3d5447] text-[#84a995]">
+            <MessageCircle className="h-7 w-7" />
+          </span>
         </div>
-        <CardTitle className="text-2xl">Dashboard WhatsApp</CardTitle>
-        <p className="text-sm text-muted-foreground">Sistema fechado - Apenas usuários autorizados</p>
+        <CardTitle className="text-2xl">Acceso al panel</CardTitle>
+        <p className="text-sm text-muted-foreground">Disponible únicamente para usuarios autorizados</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,25 +68,25 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="seu@email.com"
+              placeholder="tu@empresa.cl"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Sua senha"
+              placeholder="Tu contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <Button type="submit" className="w-full bg-white text-black" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
+          <Button type="submit" className="w-full bg-[#507c63] text-[#f0f0ea] hover:bg-[#5b8a6f]" disabled={isLoading}>
+            {isLoading ? "Ingresando..." : "Ingresar"}
           </Button>
         </form>
       </CardContent>
