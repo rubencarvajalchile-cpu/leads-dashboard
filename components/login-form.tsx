@@ -22,6 +22,19 @@ export function LoginForm() {
   const { toast } = useToast()
 
   useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("code")
+
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          router.replace("/forgot-password")
+          return
+        }
+
+        router.replace("/reset-password")
+      })
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
