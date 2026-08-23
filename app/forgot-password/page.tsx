@@ -23,9 +23,7 @@ export default function ForgotPasswordPage() {
     setErrorMessage(null)
 
     try {
-      const callbackUrl = new URL("/auth/callback", window.location.origin)
-      callbackUrl.searchParams.set("next", "/reset-password")
-      const { error } = await requestPasswordReset(email.trim(), callbackUrl.toString())
+      const { error } = await requestPasswordReset(email.trim(), window.location.origin)
 
       if (error) {
         setErrorMessage("No pudimos enviar el correo. Inténtalo nuevamente.")
