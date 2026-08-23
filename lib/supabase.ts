@@ -23,6 +23,15 @@ export async function signInWithEmail(email: string, password: string) {
   return { data, error }
 }
 
+export async function requestPasswordReset(email: string, redirectTo: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  })
+
+  return { data, error }
+}
+
 export async function signOut() {
   const supabase = createClient()
   const { error } = await supabase.auth.signOut()
