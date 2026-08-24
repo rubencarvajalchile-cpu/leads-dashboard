@@ -25,13 +25,21 @@ export function LoginForm() {
     const code = new URLSearchParams(window.location.search).get("code")
 
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          router.replace("/forgot-password")
+      supabase.auth.exchangeCodeForSession(code).then(async ({ error }) => {
+        if (!error) {
+          router.replace("/reset-password")
           return
         }
 
-        router.replace("/reset-password")
+        // createBrowserClient may have already exchanged the one-time code
+        // while initializing. In that race, a second exchange fails even
+        // though the recovery session is valid, so trust the resulting
+        // session before rejecting the link.
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        router.replace(session ? "/reset-password" : "/forgot-password")
       })
     }
 
