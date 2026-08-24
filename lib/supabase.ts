@@ -1,4 +1,8 @@
 import { createBrowserClient } from "@supabase/ssr"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { demoClientes, type Cliente } from "@/lib/dashboard-model"
+
+export type { Cliente } from "@/lib/dashboard-model"
 
 export const createClient = () =>
   createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
@@ -19,6 +23,15 @@ export async function signInWithEmail(email: string, password: string) {
   return { data, error }
 }
 
+export async function requestPasswordReset(email: string, redirectTo: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  })
+
+  return { data, error }
+}
+
 export async function signOut() {
   const supabase = createClient()
   const { error } = await supabase.auth.signOut()
@@ -34,9 +47,9 @@ export async function getCurrentUser() {
   return { user, error }
 }
 
-export async function onAuthStateChange(callback: (user: any) => void) {
+export async function onAuthStateChange(callback: (user: SupabaseUser | null) => void) {
   const supabase = createClient()
-  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     callback(session?.user || null)
   })
   return { data }
@@ -49,22 +62,13 @@ export interface User {
   last_login?: string
 }
 
-export interface Cliente {
-  id: number
-  created_at: string
-  nome: string | null
-  telefone: string | null
-  trava: boolean
-  follow_up: number
-  interessado: boolean
-  last_followup: string | null
-  produto_interesse: string | null
-  followup_status: string
-}
-
-const TABLE_NAME = process.env.NEXT_PUBLIC_TABLE_NAME!;
+const TABLE_NAME = process.env.NEXT_PUBLIC_TABLE_NAME!
 
 export async function getClientes(): Promise<Cliente[]> {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    return demoClientes.map((cliente) => ({ ...cliente }))
+  }
+
   const supabase = createClient()
   const { data, error } = await supabase.from(TABLE_NAME).select("*").order("created_at", { ascending: false })
 
@@ -77,6 +81,8 @@ export async function getClientes(): Promise<Cliente[]> {
 }
 
 export async function updateClienteStatus(id: number, trava: boolean): Promise<boolean> {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") return true
+
   const supabase = createClient()
   const { error } = await supabase.from(TABLE_NAME).update({ trava }).eq("id", id)
 

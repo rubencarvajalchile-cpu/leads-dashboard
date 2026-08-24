@@ -1,16 +1,11 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
-const geistSans = GeistSans.variable
-const geistMono = GeistMono.variable
-
 export const metadata: Metadata = {
-  title: "Agencia Whatsapp",
-  description: "Acompanhe automação dos leads",
-    generator: 'v0.app'
+  title: "Panel de atención",
+  description: "Resultados comerciales y conversaciones del canal",
 }
 
 export default function RootLayout({
@@ -19,8 +14,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${geistSans} ${geistMono} dark antialiased`}>
-      <body>{children}</body>
+    <html lang="es-CL" className="antialiased">
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   )
 }

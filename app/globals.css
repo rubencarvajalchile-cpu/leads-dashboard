@@ -4,70 +4,36 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.15 142); /* WhatsApp Green */
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: oklch(0.19 0.012 135);
+  --foreground: oklch(0.91 0.008 105);
+  --card: oklch(0.225 0.012 135);
+  --card-foreground: oklch(0.91 0.008 105);
+  --popover: oklch(0.235 0.012 135);
+  --popover-foreground: oklch(0.91 0.008 105);
+  --primary: oklch(0.61 0.105 158);
+  --primary-foreground: oklch(0.16 0.01 135);
+  --secondary: oklch(0.275 0.012 135);
+  --secondary-foreground: oklch(0.88 0.008 105);
+  --muted: oklch(0.265 0.01 135);
+  --muted-foreground: oklch(0.66 0.012 120);
+  --accent: oklch(0.285 0.02 155);
+  --accent-foreground: oklch(0.8 0.07 155);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.55 0.15 142);
-  --chart-1: oklch(0.55 0.15 142); /* WhatsApp Green */
-  --chart-2: oklch(0.6 0.118 184.704); /* Blue */
-  --chart-3: oklch(0.7 0.15 85); /* Yellow-Green */
-  --chart-4: oklch(0.45 0.12 142); /* Dark Green */
-  --chart-5: oklch(0.65 0.18 160); /* Teal */
-  --radius: 0.5rem;
-  --whatsapp-green: oklch(0.55 0.15 142);
-  --whatsapp-dark-green: oklch(0.45 0.12 142);
-  --whatsapp-light-green: oklch(0.85 0.08 142);
-}
-
-.dark {
-  /* Updated to dark theme with WhatsApp green accents */
-  --background: oklch(0.08 0 0); /* Very dark background like Vercel */
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.12 0 0); /* Dark cards */
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.12 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.65 0.15 142); /* Brighter WhatsApp Green for dark mode */
-  --primary-foreground: oklch(0.08 0 0);
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.18 0 0);
-  --accent-foreground: oklch(0.95 0 0);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.95 0 0);
-  --border: oklch(0.18 0 0);
-  --input: oklch(0.18 0 0);
-  --ring: oklch(0.65 0.15 142);
-  --chart-1: oklch(0.65 0.15 142); /* WhatsApp Green */
-  --chart-2: oklch(0.6 0.15 220); /* Blue */
-  --chart-3: oklch(0.7 0.15 85); /* Yellow-Green */
-  --chart-4: oklch(0.45 0.12 142); /* Dark Green */
-  --chart-5: oklch(0.65 0.18 160); /* Teal */
-  --whatsapp-green: oklch(0.65 0.15 142);
-  --whatsapp-dark-green: oklch(0.45 0.12 142);
-  --whatsapp-light-green: oklch(0.25 0.08 142);
+  --border: oklch(0.32 0.012 135);
+  --input: oklch(0.32 0.012 135);
+  --ring: oklch(0.61 0.105 158);
+  --chart-1: oklch(0.48 0.12 158);
+  --chart-2: oklch(0.57 0.1 230);
+  --chart-3: oklch(0.72 0.13 78);
+  --chart-4: oklch(0.5 0.08 305);
+  --chart-5: oklch(0.56 0.08 35);
+  --radius: 0.65rem;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -112,5 +78,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+    background-image: none;
+    min-height: 100vh;
   }
 }

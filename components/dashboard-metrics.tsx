@@ -1,110 +1,73 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageCircle, MessageSquareCode as MessageSquareCheck, Clock, MessageSquareX, Phone } from "lucide-react"
-import { getClientes, type Cliente } from "@/lib/supabase"
+import { isLeadClosed, isLeadInFollowUp, isLeadScheduled, type Cliente, type LeadFilter } from "@/lib/dashboard-model"
 
-const calculateMetrics = (clientes: Cliente[]) => {
-  const totalLeads = clientes.length
-  const interestedLeads = clientes.filter((cliente) => cliente.interessado).length
-  const leadsLast7Days = clientes.filter((cliente) => {
-    const clienteDate = new Date(cliente.created_at)
-    const sevenDaysAgo = new Date()
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-    return clienteDate >= sevenDaysAgo
-  }).length
-  const conversasTravadas = clientes.filter((cliente) => cliente.trava).length
-
-  return {
-    totalLeads,
-    interestedLeads,
-    leadsLast7Days,
-    conversasTravadas,
-  }
+interface DashboardMetricsProps {
+  clientes: Cliente[]
+  loading: boolean
+  activeFilter: LeadFilter
+  onFilterChange: (filter: LeadFilter) => void
 }
 
-export function DashboardMetrics() {
-  const [clientes, setClientes] = useState<Cliente[]>([])
-  const [loading, setLoading] = useState(false)
-
-  const loadClientes = async () => {
-    setLoading(true)
-    try {
-      const data = await getClientes()
-      if (data.length > 0) {
-        setClientes(data)
-      }
-    } catch (error) {
-      console.error("Erro ao carregar clientes:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadClientes()
-  }, [])
-
-  const metrics = calculateMetrics(clientes)
+export function DashboardMetrics({ clientes, loading, activeFilter, onFilterChange }: DashboardMetricsProps) {
+  const metrics = [
+    {
+      label: "Leads atendidos",
+      value: clientes.length,
+      description: "Total recibido",
+      filter: "todos" as const,
+    },
+    {
+      label: "Citas agendadas",
+      value: clientes.filter(isLeadScheduled).length,
+      description: "Con cita confirmada",
+      filter: "agendado" as const,
+    },
+    {
+      label: "Por retomar",
+      value: clientes.filter(isLeadInFollowUp).length,
+      description: "Requieren seguimiento",
+      filter: "seguimiento" as const,
+    },
+    {
+      label: "Atención finalizada",
+      value: clientes.filter(isLeadClosed).length,
+      description: "Fuera de atención activa",
+      filter: "cerrado" as const,
+    },
+  ]
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--whatsapp-green)] text-white">
-          <MessageCircle className="h-5 w-5" />
-        </div>
+    <section className="space-y-6">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <h2 className="text-2xl font-bold">Dashboard WhatsApp</h2>
-          <p className="text-muted-foreground">Acompanhe o atendimento</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6fa485]">Resumen</p>
+          <h2 className="mt-2 text-[30px] font-semibold tracking-[-0.035em] text-[#e7e8e2]">Atención comercial</h2>
         </div>
+        <p className="max-w-md text-sm leading-6 text-[#8d978f]">
+          Resultados del canal y conversaciones disponibles para tu equipo.
+        </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-[var(--whatsapp-green)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Leads</CardTitle>
-            <Phone className="h-4 w-4 text-[var(--whatsapp-green)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? "..." : metrics.totalLeads.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Contatos no WhatsApp</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Leads Interessados</CardTitle>
-            <MessageSquareCheck className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">{loading ? "..." : metrics.interestedLeads}</div>
-            <p className="text-xs text-muted-foreground">Responderam positivamente</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Novos (7 dias)</CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-500">{loading ? "..." : metrics.leadsLast7Days}</div>
-            <p className="text-xs text-muted-foreground">Novos contatos esta semana</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversas Travadas</CardTitle>
-            <MessageSquareX className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">{loading ? "..." : metrics.conversasTravadas}</div>
-            <p className="text-xs text-muted-foreground">Conversas pausadas/travadas</p>
-          </CardContent>
-        </Card>
+      <div className="grid overflow-hidden rounded-xl border border-[#343831] bg-[#1d201c] sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map(({ label, value, description, filter }, index) => (
+          <button
+            type="button"
+            key={label}
+            onClick={() => onFilterChange(filter)}
+            className={`relative min-h-36 border-[#343831] p-5 text-left transition hover:bg-[#232720] sm:[&:nth-child(odd)]:border-r xl:border-r xl:last:border-r-0 ${
+              index < 2 ? "border-b xl:border-b-0" : ""
+            } ${activeFilter === filter ? "bg-[#252b25]" : ""}`}
+          >
+            {activeFilter === filter && <span className="absolute inset-x-0 top-0 h-0.5 bg-[#6da685]" />}
+            <p className="text-sm text-[#abb2ac]">{label}</p>
+            <p className="mt-4 text-[34px] font-medium leading-none tracking-[-0.04em] text-[#f0f0eb]">
+              {loading ? "—" : value.toLocaleString("es-CL")}
+            </p>
+            <p className="mt-4 text-xs text-[#6f7871]">{description}</p>
+          </button>
+        ))}
       </div>
-    </div>
+    </section>
   )
 }
