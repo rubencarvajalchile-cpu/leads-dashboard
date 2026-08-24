@@ -35,8 +35,12 @@ La interfaz nunca es la autoridad final. Todas estas reglas están duplicadas co
 
 1. Aplicar la migración en un entorno de prueba.
 2. Crear una organización y asociar el usuario dueño.
-3. Importar una copia de los contactos actuales conservando `legacy_table` y `legacy_id`.
-4. Conectar n8n con `service_role` mediante una credencial protegida.
-5. Tras aplicar y verificar la migración, el CRM queda activo por defecto. `CRM_ENABLED=false` y
+3. La migración `202608240002_crm_sync_legacy_proyecta.sql` importa de forma idempotente solo
+   solicitudes de llamada y tomas humanas explícitas desde `clientes agente test`, conservando
+   `legacy_table` y `legacy_id`. Un trigger posterior mantiene esa copia actualizada sin bloquear n8n.
+4. Las solicitudes de llamada entran como `AI_CALL_REQUESTED`; solo una toma explícita entra con
+   autoridad `HUMAN`. Una sincronización posterior nunca rebaja un lead que ya pertenece a una persona.
+5. Conectar n8n con `service_role` mediante una credencial protegida.
+6. Tras aplicar y verificar la migración, el CRM queda activo por defecto. `CRM_ENABLED=false` y
    `NEXT_PUBLIC_CRM_ENABLED=false` funcionan como apagado operativo explícito.
-6. Mantener las tablas anteriores operativas hasta verificar el corte.
+7. Mantener las tablas anteriores operativas hasta verificar el corte.
