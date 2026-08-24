@@ -33,14 +33,31 @@ export default function ResetPasswordPage() {
       }
     })
 
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!active) return
-      if (error || !data.session) {
-        setRecoveryState("invalid")
-      } else {
-        setRecoveryState("ready")
+    const initializeRecovery = async () => {
+      const hash = new URLSearchParams(window.location.hash.slice(1))
+      const accessToken = hash.get("access_token")
+      const refreshToken = hash.get("refresh_token")
+
+      if (accessToken && refreshToken) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+
+        if (!active) return
+        if (!error && data.session) {
+          window.history.replaceState(null, "", window.location.pathname)
+          setRecoveryState("ready")
+          return
+        }
       }
-    })
+
+      const { data, error } = await supabase.auth.getSession()
+      if (!active) return
+      setRecoveryState(error || !data.session ? "invalid" : "ready")
+    }
+
+    void initializeRecovery()
 
     return () => {
       active = false
