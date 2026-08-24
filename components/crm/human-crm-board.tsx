@@ -20,6 +20,7 @@ import {
 interface HumanCrmBoardProps {
   initialLeads: CrmLeadDTO[]
   initialTakeoverQueue: CrmLeadDTO[]
+  readOnly?: boolean
 }
 
 const activeColumns: readonly HumanStage[] = [
@@ -32,7 +33,7 @@ const activeColumns: readonly HumanStage[] = [
   "DO_NOT_CONTACT",
 ]
 
-export function HumanCrmBoard({ initialLeads, initialTakeoverQueue }: HumanCrmBoardProps) {
+export function HumanCrmBoard({ initialLeads, initialTakeoverQueue, readOnly = false }: HumanCrmBoardProps) {
   const [leads, setLeads] = useState(initialLeads)
   const [takeoverQueue, setTakeoverQueue] = useState(initialTakeoverQueue)
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -122,7 +123,7 @@ export function HumanCrmBoard({ initialLeads, initialTakeoverQueue }: HumanCrmBo
                   <p className="font-medium text-[#ecece7]">{lead.contactName}</p>
                   <p className="mt-1 text-xs text-[#7f8981]">Prioridad {lead.priority}</p>
                   {lead.productInterest && <p className="mt-2 text-xs text-[#aab1aa]">{lead.productInterest}</p>}
-                  <Button type="button" size="sm" disabled={busy} onClick={() => takeLead(lead)} className="mt-3 w-full">
+                  <Button type="button" size="sm" disabled={readOnly || busy} onClick={() => takeLead(lead)} className="mt-3 w-full">
                     <UserRound className="h-3.5 w-3.5" />
                     {busy ? "Tomando..." : "Tomar conversación"}
                   </Button>
@@ -170,7 +171,7 @@ export function HumanCrmBoard({ initialLeads, initialTakeoverQueue }: HumanCrmBo
                         Mover a
                         <select
                           value={lead.stage}
-                          disabled={busy}
+                          disabled={readOnly || busy}
                           onChange={(event) => moveLead(lead, event.target.value as HumanStage)}
                           className="mt-1.5 w-full rounded-md border border-[#3b4139] bg-[#191c18] px-2 py-2 text-xs text-[#dfe1dc]"
                         >
@@ -184,11 +185,12 @@ export function HumanCrmBoard({ initialLeads, initialTakeoverQueue }: HumanCrmBo
                         <div className="mt-3 border-t border-[#343831] pt-3">
                           <input
                             value={returnReasons[lead.id] ?? ""}
+                            disabled={readOnly}
                             onChange={(event) => setReturnReasons((current) => ({ ...current, [lead.id]: event.target.value }))}
                             placeholder="Motivo para devolver a IA"
                             className="w-full rounded-md border border-[#3b4139] bg-[#191c18] px-2 py-2 text-xs text-[#dfe1dc] placeholder:text-[#667067]"
                           />
-                          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => returnToAi(lead)} className="mt-2 w-full text-xs text-[#9dbba8]">
+                          <Button type="button" variant="ghost" size="sm" disabled={readOnly || busy} onClick={() => returnToAi(lead)} className="mt-2 w-full text-xs text-[#9dbba8]">
                             {busy ? <Bot className="h-3.5 w-3.5 animate-pulse" /> : <RotateCcw className="h-3.5 w-3.5" />}
                             Devolver a IA
                           </Button>
