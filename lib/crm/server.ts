@@ -1,6 +1,7 @@
 import "server-only"
 
 import { createClient } from "@/lib/supabase-server"
+import { resolveCrmEnabled } from "@/lib/crm-config"
 import type { CrmLeadDTO, HumanStage } from "@/lib/crm-model"
 
 interface CrmLeadRow {
@@ -21,7 +22,7 @@ const CRM_LEAD_SELECT =
   "id, authority, stage, product_interest, priority, assigned_to, updated_at, contact:crm_contacts!crm_leads_contact_id_fkey(name, phone_e164)"
 
 export function isCrmEnabled() {
-  return process.env.CRM_ENABLED === "true"
+  return resolveCrmEnabled(process.env.CRM_ENABLED)
 }
 
 async function createAuthenticatedClient() {

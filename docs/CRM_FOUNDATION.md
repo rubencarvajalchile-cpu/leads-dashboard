@@ -37,6 +37,6 @@ La interfaz nunca es la autoridad final. Todas estas reglas están duplicadas co
 2. Crear una organización y asociar el usuario dueño.
 3. Importar una copia de los contactos actuales conservando `legacy_table` y `legacy_id`.
 4. Conectar n8n con `service_role` mediante una credencial protegida.
-5. Activar `CRM_ENABLED=true` y `NEXT_PUBLIC_CRM_ENABLED=true` solo tras probar RLS y RPC.
+5. Tras aplicar y verificar la migración, el CRM queda activo por defecto. `CRM_ENABLED=false` y
+   `NEXT_PUBLIC_CRM_ENABLED=false` funcionan como apagado operativo explícito.
 6. Mantener las tablas anteriores operativas hasta verificar el corte.
-

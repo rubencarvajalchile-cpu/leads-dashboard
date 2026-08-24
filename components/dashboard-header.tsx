@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { signOut } from "@/lib/supabase"
+import { resolveCrmEnabled } from "@/lib/crm-config"
 import { useToast } from "@/hooks/use-toast"
 
 interface DashboardHeaderProps {
@@ -16,7 +17,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   const router = useRouter()
   const { toast } = useToast()
   const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
-  const crmEnabled = process.env.NEXT_PUBLIC_CRM_ENABLED === "true"
+  const crmEnabled = resolveCrmEnabled(process.env.NEXT_PUBLIC_CRM_ENABLED)
 
   const handleLogout = async () => {
     if (demoMode) {
