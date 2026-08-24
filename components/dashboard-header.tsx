@@ -1,6 +1,7 @@
 "use client"
 
-import { Building2, LogOut } from "lucide-react"
+import { Building2, KanbanSquare, LogOut } from "lucide-react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +16,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   const router = useRouter()
   const { toast } = useToast()
   const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true"
+  const crmEnabled = process.env.NEXT_PUBLIC_CRM_ENABLED === "true"
 
   const handleLogout = async () => {
     if (demoMode) {
@@ -56,6 +58,14 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {crmEnabled && (
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+              <Link href="/dashboard/crm">
+                <KanbanSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">CRM</span>
+              </Link>
+            </Button>
+          )}
           <div className="hidden items-center gap-2 text-xs text-muted-foreground lg:flex">
             <span className="h-1.5 w-1.5 rounded-full bg-[#65a780]" />
             Actualizado ahora
