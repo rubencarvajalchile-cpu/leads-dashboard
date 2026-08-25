@@ -12,6 +12,7 @@ test("expone tres columnas Lucas y seis Ventas", () => {
   const columns = defaultCrmBoardColumns()
   assert.equal(columnsForBoard(columns, "LUCAS").length, 3)
   assert.equal(columnsForBoard(columns, "SALES").length, 6)
+  assert.equal(columns.find((column) => column.key === "SALES_TAKEN")?.label, "Derivado a humano · sin contacto")
 })
 
 test("agrupa etapas sin perder semántica", () => {
@@ -35,6 +36,7 @@ test("lead entrante de Ventas es espejo exacto de listo para llamada", () => {
 test("tomar no equivale a contactar", () => {
   assert.equal(salesSelectValue(lead("HUMAN_NEW", "HUMAN")), "HUMAN_NEW")
   assert.equal(SALES_MOVE_TARGETS.some((target) => target.stage === "HUMAN_NEW"), true)
+  assert.equal(SALES_MOVE_TARGETS.find((target) => target.stage === "HUMAN_NEW")?.label, "Sin contacto registrado")
 })
 
 test("un lead humano no vuelve a Lucas", () => {

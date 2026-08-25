@@ -72,7 +72,7 @@ export default function CrmDemoPage() {
         </div>
 
         <DualCrmBoard initialAiLeads={previewAiLeads} initialHumanLeads={previewHumanLeads}
-          organizationId="00000000-0000-0000-0000-000000000000" canManageColumns demoMode />
+          organizationId="00000000-0000-0000-0000-000000000000" currentUserId="preview-owner" canManageColumns demoMode />
       </main>
     </div>
   )

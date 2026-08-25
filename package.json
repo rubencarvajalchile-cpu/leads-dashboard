@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "test:crm": "node --test --experimental-strip-types tests/crm-config.test.ts tests/crm-model.test.ts tests/crm-board-model.test.ts tests/crm-migration.test.ts tests/crm-sync-migration.test.ts tests/crm-board-migration.test.ts tests/crm-lead-workspace-migration.test.ts",
+    "test:crm": "node --test --experimental-strip-types tests/crm-config.test.ts tests/crm-model.test.ts tests/crm-board-model.test.ts tests/crm-migration.test.ts tests/crm-sync-migration.test.ts tests/crm-board-migration.test.ts tests/crm-lead-workspace-migration.test.ts tests/crm-sales-usability-guard.test.ts",
     "start": "next start"
   },
   "dependencies": {

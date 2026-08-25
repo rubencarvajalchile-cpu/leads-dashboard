@@ -18,6 +18,11 @@ export type TerminalStage = (typeof TERMINAL_STAGES)[number]
 export type CrmLeadStage = AiStage | HumanStage
 export type CrmAuthority = "AI" | "HUMAN"
 
+export interface CrmNextTaskDTO {
+  title: string
+  dueAt: string | null
+}
+
 export const HUMAN_STAGE_LABELS: Record<HumanStage, string> = {
   HUMAN_NEW: "Por contactar",
   HUMAN_CONTACTING: "Contactando",
@@ -38,6 +43,7 @@ export interface CrmLeadDTO {
   priority: "P1" | "P2" | "P3"
   assignedTo: string | null
   updatedAt: string
+  nextTask?: CrmNextTaskDTO | null
 }
 
 export function isAiStage(stage: CrmLeadStage | string): stage is AiStage {
@@ -74,4 +80,3 @@ export function canHumanMove(from: CrmLeadStage, to: CrmLeadStage, authority: Cr
 export function canReturnToAi(stage: CrmLeadStage, authority: CrmAuthority) {
   return authority === "HUMAN" && isHumanStage(stage) && !isTerminalStage(stage)
 }
-

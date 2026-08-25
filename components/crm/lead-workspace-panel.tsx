@@ -43,6 +43,22 @@ function activityLabel(eventType: string) {
   return labels[eventType] ?? eventType.replaceAll("_", " ")
 }
 
+function nextStepCopy(lead: CrmLeadDTO, openTasks: number) {
+  if (lead.authority === "AI" && lead.stage === "AI_CALL_REQUESTED") {
+    return "Lucas dejó una solicitud de llamada. Revisa la ficha y toma la conversación desde el tablero de Ventas cuando estés listo."
+  }
+  if (lead.authority === "AI") return "Lucas sigue calificando este lead. La atención humana se habilita cuando solicite una llamada."
+  if (lead.stage === "HUMAN_NEW") {
+    return "Aún no hay un contacto humano registrado. Conversa por WhatsApp o llamada y luego usa “Registrar contacto”."
+  }
+  if (lead.stage === "WON" || lead.stage === "LOST" || lead.stage === "DO_NOT_CONTACT") {
+    return "Este lead está cerrado. El historial queda disponible para consulta, sin acciones comerciales pendientes."
+  }
+  return openTasks > 0
+    ? "Revisa y completa la próxima acción pendiente antes de avanzar la etapa comercial."
+    : "Registra una próxima acción para que el lead no quede sin seguimiento."
+}
+
 function Timeline({ workspace }: { workspace: CrmLeadWorkspaceDTO }) {
   const entries = useMemo(() => [
     ...workspace.activities.map((item) => ({ id: `activity-${item.id}`, at: item.createdAt, icon: "activity", text: activityLabel(item.eventType) })),
@@ -163,6 +179,11 @@ function LeadWorkspaceContent({ lead, readOnly = false, onClose, onContactRecord
               <div><p className="text-xs text-[#7f8981]">Calificación</p><p className="mt-1 text-[#d8dcd5]">{workspace?.qualificationStatus ?? "Sin dato"}</p></div>
               <div><p className="text-xs text-[#7f8981]">Última actualización</p><p className="mt-1 text-[#d8dcd5]">{formatDate(lead.updatedAt)}</p></div>
               <div className="col-span-2"><p className="text-xs text-[#7f8981]">Datos técnicos</p><p className="mt-1 text-[#b1b8b0]">Comuna, techo, consumo y conversación aún no se guardan en este CRM.</p></div>
+            </section>
+
+            <section className="rounded-xl border border-[#4b594b] bg-[#1e291f] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8cb393]">Siguiente paso</p>
+              <p className="mt-2 text-sm leading-6 text-[#d6dfd4]">{nextStepCopy(lead, openTasks.length)}</p>
             </section>
 
             {!humanControlled && <section className="rounded-xl border border-[#785c30] bg-[#332718] p-4 text-sm text-[#e0c68f]">Lucas sigue a cargo. La ficha se puede revisar, pero las notas, tareas y contacto se habilitan cuando una persona toma el lead.</section>}

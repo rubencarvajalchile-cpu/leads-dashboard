@@ -39,6 +39,7 @@ export default async function CrmPage() {
             initialColumns={columns}
             organizationId={access?.organizationId ?? ""}
             canManageColumns={access?.canManageColumns ?? false}
+            currentUserId={user.id}
           />
         ) : (
           <div className="rounded-xl border border-[#3b423a] bg-[#1d201c] px-6 py-12">

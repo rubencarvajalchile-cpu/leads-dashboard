@@ -59,6 +59,13 @@ interface CrmTaskRow {
   updated_at: string
 }
 
+interface CrmOpenTaskPreviewRow {
+  lead_id: string
+  title: string
+  due_at: string | null
+  created_at: string
+}
+
 const CRM_LEAD_SELECT =
   "id, authority, stage, product_interest, priority, assigned_to, updated_at, contact:crm_contacts!crm_leads_contact_id_fkey(name, phone_e164)"
 const CRM_LEAD_WORKSPACE_SELECT =
@@ -91,8 +98,28 @@ function mapLeadRows(data: unknown): CrmLeadDTO[] {
       priority: row.priority,
       assignedTo: row.assigned_to,
       updatedAt: row.updated_at,
+      nextTask: null,
     }
   })
+}
+
+async function withNextOpenTasks(supabase: Awaited<ReturnType<typeof createAuthenticatedClient>>["supabase"], leads: CrmLeadDTO[]) {
+  if (leads.length === 0) return leads
+  const { data, error } = await supabase.from("crm_tasks")
+    .select("lead_id, title, due_at, created_at")
+    .in("lead_id", leads.map((lead) => lead.id))
+    .eq("status", "OPEN")
+    .order("due_at", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true })
+  if (error) throw new Error(`CRM_TASK_PREVIEW_READ_FAILED:${error.code}`)
+
+  const nextTaskByLead = new Map<string, { title: string; dueAt: string | null }>()
+  for (const task of (data ?? []) as CrmOpenTaskPreviewRow[]) {
+    if (!nextTaskByLead.has(task.lead_id)) {
+      nextTaskByLead.set(task.lead_id, { title: task.title, dueAt: task.due_at })
+    }
+  }
+  return leads.map((lead) => ({ ...lead, nextTask: nextTaskByLead.get(lead.id) ?? null }))
 }
 
 export async function listHumanCrmLeads(): Promise<CrmLeadDTO[]> {
@@ -108,7 +135,7 @@ export async function listHumanCrmLeads(): Promise<CrmLeadDTO[]> {
 
   if (error) throw new Error(`CRM_READ_FAILED:${error.code}`)
 
-  return mapLeadRows(data)
+  return withNextOpenTasks(supabase, mapLeadRows(data))
 }
 
 export async function listTakeoverQueue(): Promise<CrmLeadDTO[]> {

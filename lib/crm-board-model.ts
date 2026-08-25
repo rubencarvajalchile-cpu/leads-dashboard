@@ -22,7 +22,7 @@ const DEFAULT_COLUMNS: readonly CrmBoardColumnDTO[] = [
   { board: "LUCAS", key: "LUCAS_QUALIFYING", label: "Calificando", color: "#b69052", position: 1 },
   { board: "LUCAS", key: "LUCAS_READY", label: "Listo para llamada", color: "#6e8fba", position: 2 },
   { board: "SALES", key: "SALES_INBOX", label: "Lead entrante", color: "#6e8fba", position: 0 },
-  { board: "SALES", key: "SALES_TAKEN", label: "Tomado · pendiente de contacto", color: "#a47f47", position: 1 },
+  { board: "SALES", key: "SALES_TAKEN", label: "Derivado a humano · sin contacto", color: "#a47f47", position: 1 },
   { board: "SALES", key: "SALES_CONTACTED", label: "Contactado", color: "#8c7db5", position: 2 },
   { board: "SALES", key: "SALES_MANAGING", label: "En gestión", color: "#b69052", position: 3 },
   { board: "SALES", key: "SALES_WON", label: "Ganado", color: "#5f9f78", position: 4 },
@@ -58,7 +58,7 @@ export function leadColumnKey(lead: CrmLeadDTO, board: CrmBoard): CrmColumnKey |
 }
 
 export const SALES_MOVE_TARGETS: readonly { stage: HumanStage; label: string }[] = [
-  { stage: "HUMAN_NEW", label: "Tomado · pendiente de contacto" },
+  { stage: "HUMAN_NEW", label: "Sin contacto registrado" },
   { stage: "HUMAN_CONTACTING", label: "Contactado" },
   { stage: "HUMAN_NEGOTIATION", label: "En gestión" },
   { stage: "WON", label: "Ganado" },
