@@ -26,15 +26,15 @@ test("la solicitud de llamada es la misma ficha visible en ambos tableros", () =
   assert.equal(leadColumnKey(ready, "SALES"), "SALES_INBOX")
 })
 
-test("lead entrante de Ventas es espejo exacto de listo para llamada", () => {
+test("lead entrante de Ventas recibe listos para llamada y conserva tomados sin contacto", () => {
   assert.equal(leadColumnKey(lead("AI_CALL_REQUESTED", "AI"), "SALES"), "SALES_INBOX")
-  assert.equal(leadColumnKey(lead("HUMAN_NEW", "HUMAN"), "SALES"), "SALES_CONTACTED")
+  assert.equal(leadColumnKey(lead("HUMAN_NEW", "HUMAN"), "SALES"), "SALES_INBOX")
   assert.equal(leadColumnKey(lead("HUMAN_CONTACTING", "HUMAN"), "SALES"), "SALES_CONTACTED")
 })
 
-test("un lead ya tomado no puede volver a la cola compartida", () => {
-  assert.equal(salesSelectValue(lead("HUMAN_NEW", "HUMAN")), "HUMAN_CONTACTING")
-  assert.equal(SALES_MOVE_TARGETS.some((target) => target.stage === "HUMAN_NEW"), false)
+test("tomar no equivale a contactar", () => {
+  assert.equal(salesSelectValue(lead("HUMAN_NEW", "HUMAN")), "HUMAN_NEW")
+  assert.equal(SALES_MOVE_TARGETS.some((target) => target.stage === "HUMAN_NEW"), true)
 })
 
 test("un lead humano no vuelve a Lucas", () => {

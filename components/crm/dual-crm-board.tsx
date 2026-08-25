@@ -43,6 +43,11 @@ function LeadCard({ lead, board, busy, readOnly, take, move }: {
       </div>
       {lead.productInterest && <p className="mt-3 text-xs leading-5 text-[#aab1aa]">{lead.productInterest}</p>}
       {lead.stage === "DO_NOT_CONTACT" && <span className="mt-3 inline-flex rounded-full bg-[#4a2b2b] px-2 py-1 text-[10px] font-semibold uppercase text-[#e4a2a2]">No contactar</span>}
+      {board === "SALES" && lead.authority === "HUMAN" && lead.stage === "HUMAN_NEW" && (
+        <span className="mt-3 inline-flex rounded-full bg-[#493d25] px-2 py-1 text-[10px] font-semibold uppercase text-[#ddc48e]">
+          Tomado · contacto pendiente
+        </span>
+      )}
       {lead.phoneE164 && board === "SALES" && lead.authority === "HUMAN" && (
         <a className="mt-3 flex items-center gap-1.5 text-xs text-[#80b395]" href={`https://wa.me/${lead.phoneE164.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
           <Phone className="h-3.5 w-3.5" /> Abrir WhatsApp

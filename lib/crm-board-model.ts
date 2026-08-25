@@ -46,10 +46,10 @@ export function leadColumnKey(lead: CrmLeadDTO, board: CrmBoard): CrmColumnKey |
   }
 
   if (lead.authority === "AI") return lead.stage === "AI_CALL_REQUESTED" ? "SALES_INBOX" : null
-  // SALES_INBOX is the exact mirror of Lucas' AI_CALL_REQUESTED queue.
-  // Once a seller takes the lead it becomes human-owned and leaves both
-  // mirrored queues, even before the first manual contact is recorded.
-  if (lead.stage === "HUMAN_NEW" || lead.stage === "HUMAN_CONTACTING") return "SALES_CONTACTED"
+  // A takeover changes authority, not contact status. HUMAN_NEW remains in
+  // the Sales inbox until the seller explicitly records first contact.
+  if (lead.stage === "HUMAN_NEW") return "SALES_INBOX"
+  if (lead.stage === "HUMAN_CONTACTING") return "SALES_CONTACTED"
   if (lead.stage === "HUMAN_PROPOSAL" || lead.stage === "HUMAN_NEGOTIATION") return "SALES_MANAGING"
   if (lead.stage === "WON") return "SALES_WON"
   if (lead.stage === "LOST" || lead.stage === "DO_NOT_CONTACT") return "SALES_LOST"
@@ -57,6 +57,7 @@ export function leadColumnKey(lead: CrmLeadDTO, board: CrmBoard): CrmColumnKey |
 }
 
 export const SALES_MOVE_TARGETS: readonly { stage: HumanStage; label: string }[] = [
+  { stage: "HUMAN_NEW", label: "Lead entrante" },
   { stage: "HUMAN_CONTACTING", label: "Contactado" },
   { stage: "HUMAN_NEGOTIATION", label: "En gestión" },
   { stage: "WON", label: "Ganado" },
@@ -66,7 +67,6 @@ export const SALES_MOVE_TARGETS: readonly { stage: HumanStage; label: string }[]
 
 export function salesSelectValue(lead: CrmLeadDTO): HumanStage {
   if (lead.authority !== "HUMAN") return "HUMAN_NEW"
-  if (lead.stage === "HUMAN_NEW") return "HUMAN_CONTACTING"
   if (lead.stage === "HUMAN_PROPOSAL") return "HUMAN_NEGOTIATION"
   return lead.stage as HumanStage
 }
