@@ -1,8 +1,9 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
-import { ArrowLeft, ArrowRight, Bot, Check, Phone, Settings2, UserRound, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, Bot, Check, Eye, Phone, Settings2, UserRound, X } from "lucide-react"
 import { moveHumanLeadAction, saveBoardColumnsAction, takeHumanLeadAction } from "@/app/dashboard/crm/actions"
+import { LeadWorkspacePanel } from "@/components/crm/lead-workspace-panel"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -26,9 +27,11 @@ const copy: Record<CrmBoard, { title: string; description: string }> = {
   SALES: { title: "CRM Ventas", description: "Gestión humana: toma los leads listos para llamada y conduce el cierre comercial." },
 }
 
-function LeadCard({ lead, board, busy, readOnly, take, move }: {
+function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open }: {
   lead: CrmLeadDTO; board: CrmBoard; busy: boolean; readOnly: boolean
+  demoMode: boolean
   take: (lead: CrmLeadDTO) => void; move: (lead: CrmLeadDTO, stage: HumanStage) => void
+  open: (lead: CrmLeadDTO) => void
 }) {
   const pendingTakeover = board === "SALES" && lead.authority === "AI" && lead.stage === "AI_CALL_REQUESTED"
   const terminal = lead.authority === "HUMAN" && isTerminalStage(lead.stage)
@@ -45,7 +48,7 @@ function LeadCard({ lead, board, busy, readOnly, take, move }: {
       {lead.stage === "DO_NOT_CONTACT" && <span className="mt-3 inline-flex rounded-full bg-[#4a2b2b] px-2 py-1 text-[10px] font-semibold uppercase text-[#e4a2a2]">No contactar</span>}
       {board === "SALES" && lead.authority === "HUMAN" && lead.stage === "HUMAN_NEW" && (
         <span className="mt-3 inline-flex rounded-full bg-[#493d25] px-2 py-1 text-[10px] font-semibold uppercase text-[#ddc48e]">
-          Tomado · contacto pendiente
+          Humano a cargo · contacto pendiente
         </span>
       )}
       {lead.phoneE164 && board === "SALES" && lead.authority === "HUMAN" && (
@@ -71,6 +74,10 @@ function LeadCard({ lead, board, busy, readOnly, take, move }: {
           </select>
         </label>
       )}
+      <Button type="button" size="sm" variant="ghost" disabled={demoMode} title={demoMode ? "La ficha operativa está disponible al ingresar al CRM." : undefined}
+        onClick={() => open(lead)} className="mt-3 w-full text-[#b9c4b8]">
+        <Eye className="h-3.5 w-3.5" /> Ver ficha
+      </Button>
     </article>
   )
 }
@@ -82,6 +89,7 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
   const [columns, setColumns] = useState(initialColumns?.length ? initialColumns : defaultCrmBoardColumns())
   const [draft, setDraft] = useState<CrmBoardColumnDTO[] | null>(null)
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [selectedLead, setSelectedLead] = useState<CrmLeadDTO | null>(null)
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
   const visibleColumns = useMemo(() => columnsForBoard(draft ?? columns, board), [board, columns, draft])
@@ -121,6 +129,16 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
       setPendingId(null)
       if (!result.ok) { setHumanLeads(previous); toast({ title: result.error, variant: "destructive" }) }
     })
+  }
+
+  const markContacted = (leadId: string) => {
+    const now = new Date().toISOString()
+    setHumanLeads((items) => items.map((item) => item.id === leadId
+      ? { ...item, stage: "HUMAN_CONTACTING", updatedAt: now }
+      : item))
+    setSelectedLead((current) => current?.id === leadId
+      ? { ...current, stage: "HUMAN_CONTACTING", updatedAt: now }
+      : current)
   }
 
   const updateDraft = (key: string, patch: Partial<CrmBoardColumnDTO>) =>
@@ -196,11 +214,12 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
             return <section key={column.key} className="overflow-hidden rounded-2xl border border-[#343831] bg-[#1d201c]">
               <div className="h-1" style={{ backgroundColor: column.color }} />
               <header className="flex items-center justify-between border-b border-[#343831] px-4 py-3.5"><div><h2 className="text-sm font-medium text-[#d7d9d3]">{column.label}</h2>{board === "LUCAS" && <p className="mt-1 text-[10px] uppercase tracking-wider text-[#6f7d72]">Automático</p>}</div><span className="rounded-full bg-[#292e28] px-2 py-0.5 text-xs text-[#9ca49d]">{items.length}</span></header>
-              <div className="min-h-[260px] space-y-3 p-3">{items.length === 0 && <p className="px-2 py-8 text-center text-xs text-[#697169]">Sin leads en esta etapa</p>}{items.map((lead) => <LeadCard key={lead.id} lead={lead} board={board} busy={isPending && pendingId === lead.id} readOnly={readOnly} take={take} move={move} />)}</div>
+              <div className="min-h-[260px] space-y-3 p-3">{items.length === 0 && <p className="px-2 py-8 text-center text-xs text-[#697169]">Sin leads en esta etapa</p>}{items.map((lead) => <LeadCard key={lead.id} lead={lead} board={board} busy={isPending && pendingId === lead.id} readOnly={readOnly} demoMode={demoMode} take={take} move={move} open={setSelectedLead} />)}</div>
             </section>
           })}
         </div>
       </div>
+      <LeadWorkspacePanel lead={selectedLead} readOnly={readOnly || demoMode} onClose={() => setSelectedLead(null)} onContactRecorded={markContacted} />
     </div>
   )
 }

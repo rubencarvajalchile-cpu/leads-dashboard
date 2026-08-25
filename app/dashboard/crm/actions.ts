@@ -4,7 +4,17 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { CRM_BOARDS, CRM_COLUMN_KEYS } from "@/lib/crm-board-model"
 import { HUMAN_STAGES } from "@/lib/crm-model"
-import { moveHumanCrmLead, returnHumanCrmLeadToAi, takeHumanCrmLead, updateCrmBoardColumns } from "@/lib/crm/server"
+import {
+  addCrmLeadNote,
+  completeCrmLeadTask,
+  createCrmLeadTask,
+  getCrmLeadWorkspace,
+  moveHumanCrmLead,
+  recordCrmHumanContact,
+  returnHumanCrmLeadToAi,
+  takeHumanCrmLead,
+  updateCrmBoardColumns,
+} from "@/lib/crm/server"
 
 const takeSchema = z.object({
   leadId: z.string().uuid(),
@@ -31,6 +41,19 @@ const saveColumnsSchema = z.object({
     color: z.string().regex(/^#[0-9a-fA-F]{6}$/), position: z.number().int().min(0).max(20),
   })).min(1).max(8),
 })
+
+const leadIdSchema = z.object({ leadId: z.string().uuid() })
+const contactSchema = leadIdSchema.extend({
+  operationId: z.string().uuid(),
+  channel: z.enum(["WHATSAPP", "LLAMADA", "OTRO"]),
+  note: z.string().trim().max(4000).optional(),
+})
+const noteSchema = leadIdSchema.extend({ body: z.string().trim().min(1).max(4000) })
+const taskSchema = leadIdSchema.extend({
+  title: z.string().trim().min(1).max(240),
+  dueAt: z.string().datetime().nullable(),
+})
+const completeTaskSchema = leadIdSchema.extend({ taskId: z.string().uuid() })
 
 export async function takeHumanLeadAction(input: unknown) {
   const parsed = takeSchema.safeParse(input)
@@ -83,5 +106,63 @@ export async function saveBoardColumnsAction(input: unknown) {
     return { ok: true as const }
   } catch {
     return { ok: false as const, error: "No se pudo guardar la configuración." }
+  }
+}
+
+export async function getLeadWorkspaceAction(input: unknown) {
+  const parsed = leadIdSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: "Lead inválido." }
+  try {
+    return { ok: true as const, workspace: await getCrmLeadWorkspace(parsed.data.leadId) }
+  } catch {
+    return { ok: false as const, error: "No se pudo cargar la ficha." }
+  }
+}
+
+export async function recordHumanContactAction(input: unknown) {
+  const parsed = contactSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: "Datos de contacto inválidos." }
+  try {
+    await recordCrmHumanContact(parsed.data.leadId, parsed.data.operationId, parsed.data.channel, parsed.data.note)
+    revalidatePath("/dashboard/crm")
+    return { ok: true as const }
+  } catch {
+    return { ok: false as const, error: "No se pudo registrar el contacto." }
+  }
+}
+
+export async function addLeadNoteAction(input: unknown) {
+  const parsed = noteSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: "La nota debe tener entre 1 y 4.000 caracteres." }
+  try {
+    await addCrmLeadNote(parsed.data.leadId, parsed.data.body)
+    revalidatePath("/dashboard/crm")
+    return { ok: true as const }
+  } catch {
+    return { ok: false as const, error: "No se pudo guardar la nota." }
+  }
+}
+
+export async function createLeadTaskAction(input: unknown) {
+  const parsed = taskSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: "La próxima acción no es válida." }
+  try {
+    await createCrmLeadTask(parsed.data.leadId, parsed.data.title, parsed.data.dueAt)
+    revalidatePath("/dashboard/crm")
+    return { ok: true as const }
+  } catch {
+    return { ok: false as const, error: "No se pudo crear la próxima acción." }
+  }
+}
+
+export async function completeLeadTaskAction(input: unknown) {
+  const parsed = completeTaskSchema.safeParse(input)
+  if (!parsed.success) return { ok: false as const, error: "Tarea inválida." }
+  try {
+    await completeCrmLeadTask(parsed.data.leadId, parsed.data.taskId)
+    revalidatePath("/dashboard/crm")
+    return { ok: true as const }
+  } catch {
+    return { ok: false as const, error: "No se pudo completar la tarea." }
   }
 }
