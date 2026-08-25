@@ -168,8 +168,7 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
     if (demoMode) {
       setAiLeads((items) => items.filter((item) => item.id !== lead.id))
       setHumanLeads((items) => [humanLead, ...items])
-      if (openAfterTaking) setSelectedLead(humanLead)
-      toast({ title: "Lead tomado. Lucas dejó de intervenir." })
+      toast({ title: "Lead tomado en la demostración. Lucas dejó de intervenir." })
       return
     }
     setPendingId(lead.id)
