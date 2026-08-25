@@ -10,7 +10,12 @@ const commercialMigration = readFileSync(
   new URL("../supabase/migrations/202608250009_crm_commercial_profile.sql", import.meta.url),
   "utf8",
 )
+const conversationMigration = readFileSync(
+  new URL("../supabase/migrations/202608250010_crm_readonly_conversation.sql", import.meta.url),
+  "utf8",
+)
 const server = readFileSync(new URL("../lib/crm/server.ts", import.meta.url), "utf8")
+const panel = readFileSync(new URL("../components/crm/lead-workspace-panel.tsx", import.meta.url), "utf8")
 
 test("el contacto humano se registra mediante una única frontera auditada", () => {
   assert.match(migration, /create or replace function public\.crm_record_human_contact/)
@@ -63,4 +68,25 @@ test("la ficha comercial lee hechos reales mediante una frontera autenticada", (
 test("el servidor carga el perfil comercial junto con la ficha", () => {
   assert.match(server, /supabase\.rpc\("crm_get_lead_commercial_profile"/)
   assert.match(server, /commercialProfile:/)
+})
+
+test("el chat se expone por una frontera autenticada y exclusivamente de lectura", () => {
+  assert.match(conversationMigration, /create or replace function public\.crm_get_lead_conversation/)
+  assert.match(conversationMigration, /security definer/)
+  assert.match(conversationMigration, /crm_is_org_member\(v_organization_id\)/)
+  assert.match(conversationMigration, /from public\.n8n_chat_histories history/)
+  assert.match(conversationMigration, /substring\(history\.session_id from/)
+  assert.match(conversationMigration, /history\.message ->> 'type' in \('human', 'ai'\)/)
+  assert.match(conversationMigration, /revoke all on function public\.crm_get_lead_conversation\(uuid\) from public, anon/)
+  assert.match(conversationMigration, /grant execute on function public\.crm_get_lead_conversation\(uuid\) to authenticated/)
+  assert.doesNotMatch(conversationMigration, /\b(insert|update|delete|truncate)\s+(into|public|from)/i)
+})
+
+test("la ficha muestra el historial como WhatsApp sin controles de envío", () => {
+  assert.match(server, /supabase\.rpc\("crm_get_lead_conversation"/)
+  assert.match(panel, /Conversación con Lucas/)
+  assert.match(panel, /solo lectura/)
+  assert.match(panel, /WhatsAppConversation/)
+  assert.match(panel, /Desde aquí no se pueden enviar ni modificar mensajes/)
+  assert.doesNotMatch(panel, /Enviar mensaje/)
 })

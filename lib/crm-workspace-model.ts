@@ -51,12 +51,20 @@ export interface CrmCommercialProfileDTO {
   sourceUpdatedAt: string | null
 }
 
+export interface CrmConversationMessageDTO {
+  id: string
+  speaker: "CLIENT" | "LUCAS"
+  content: string
+  sequenceNumber: number
+}
+
 export interface CrmLeadWorkspaceDTO {
   lead: CrmLeadDTO
   qualificationStatus: string | null
   humanTakenAt: string | null
   createdAt: string
   commercialProfile: CrmCommercialProfileDTO | null
+  conversation: CrmConversationMessageDTO[]
   activities: CrmActivityDTO[]
   notes: CrmNoteDTO[]
   tasks: CrmTaskDTO[]

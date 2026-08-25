@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CalendarClock, CheckCircle2, ClipboardList, FileText, LoaderCircle, StickyNote, X } from "lucide-react"
+import { CalendarClock, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, FileText, LoaderCircle, MessageCircle, StickyNote, X } from "lucide-react"
 import {
   addLeadNoteAction,
   completeLeadTaskAction,
@@ -101,6 +101,37 @@ function Timeline({ workspace }: { workspace: CrmLeadWorkspaceDTO }) {
   </ol>
 }
 
+function WhatsAppConversation({ workspace }: { workspace: CrmLeadWorkspaceDTO }) {
+  if (workspace.conversation.length === 0) {
+    return <div className="rounded-xl bg-[#efeae2] px-4 py-8 text-center text-sm text-[#667069]">No encontramos mensajes guardados para este contacto.</div>
+  }
+
+  return (
+    <div
+      className="max-h-[480px] space-y-2 overflow-y-auto rounded-xl border border-[#c9c3b8] px-3 py-4 sm:px-4"
+      style={{
+        backgroundColor: "#efeae2",
+        backgroundImage: "radial-gradient(circle at 20px 20px, rgba(80, 94, 82, 0.06) 1px, transparent 1.5px)",
+        backgroundSize: "28px 28px",
+      }}
+      aria-label="Conversación de WhatsApp en modo solo lectura"
+    >
+      {workspace.conversation.map((message) => {
+        const fromLucas = message.speaker === "LUCAS"
+        return (
+          <div key={message.id} className={`flex ${fromLucas ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[86%] rounded-lg px-3 py-2 shadow-sm ${fromLucas ? "rounded-tr-sm bg-[#d9fdd3] text-[#172019]" : "rounded-tl-sm bg-white text-[#202522]"}`}>
+              <p className={`mb-1 text-[10px] font-semibold ${fromLucas ? "text-[#2f7750]" : "text-[#53605a]"}`}>{fromLucas ? "Lucas" : "Cliente"}</p>
+              <p className="whitespace-pre-wrap break-words text-[13px] leading-[1.45]">{message.content}</p>
+              <p className="mt-1 text-right text-[9px] text-[#7b837e]">#{message.sequenceNumber}</p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function LeadWorkspacePanel(props: Props) {
   if (!props.lead) return null
   return <LeadWorkspaceContent key={props.lead.id} {...props} lead={props.lead} />
@@ -115,6 +146,7 @@ function LeadWorkspaceContent({ lead, readOnly = false, onClose, onContactRecord
   const [channel, setChannel] = useState<"WHATSAPP" | "LLAMADA" | "OTRO">("WHATSAPP")
   const [taskTitle, setTaskTitle] = useState("")
   const [taskDueAt, setTaskDueAt] = useState(() => toLocalInput(new Date(Date.now() + 86_400_000)))
+  const [conversationOpen, setConversationOpen] = useState(false)
   const { toast } = useToast()
 
   const reload = useCallback(async () => {
@@ -233,6 +265,22 @@ function LeadWorkspaceContent({ lead, readOnly = false, onClose, onContactRecord
             <section className="rounded-xl border border-[#4b594b] bg-[#1e291f] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8cb393]">Siguiente paso</p>
               <p className="mt-2 text-sm leading-6 text-[#d6dfd4]">{nextStepCopy(lead, openTasks.length)}</p>
+            </section>
+
+            <section className="rounded-xl border border-[#39443d] bg-[#1c221e] p-4">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-3 text-left"
+                onClick={() => setConversationOpen((current) => !current)}
+                aria-expanded={conversationOpen}
+              >
+                <span className="flex items-center gap-3">
+                  <span className="rounded-full bg-[#245c45] p-2 text-[#d9fdd3]"><MessageCircle className="h-4 w-4" /></span>
+                  <span><span className="block font-medium text-[#e4e9e2]">Conversación con Lucas</span><span className="mt-0.5 block text-xs text-[#879189]">{workspace?.conversation.length ?? 0} mensajes · solo lectura</span></span>
+                </span>
+                {conversationOpen ? <ChevronUp className="h-4 w-4 text-[#8e9990]" /> : <ChevronDown className="h-4 w-4 text-[#8e9990]" />}
+              </button>
+              {conversationOpen && workspace && <div className="mt-4"><WhatsAppConversation workspace={workspace} /><p className="mt-2 text-center text-[10px] text-[#778078]">Vista histórica. Desde aquí no se pueden enviar ni modificar mensajes.</p></div>}
             </section>
 
             {!humanControlled && <section className="rounded-xl border border-[#785c30] bg-[#332718] p-4 text-sm text-[#e0c68f]">Lucas sigue a cargo. La ficha se puede revisar, pero las notas, tareas y contacto se habilitan cuando una persona toma el lead.</section>}
