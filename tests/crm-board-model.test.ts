@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { columnsForBoard, defaultCrmBoardColumns, leadColumnKey } from "../lib/crm-board-model.ts"
+import { columnsForBoard, defaultCrmBoardColumns, leadColumnKey, SALES_MOVE_TARGETS, salesSelectValue } from "../lib/crm-board-model.ts"
 import type { CrmLeadDTO } from "../lib/crm-model.ts"
 
 function lead(stage: CrmLeadDTO["stage"], authority: CrmLeadDTO["authority"]): CrmLeadDTO {
@@ -24,6 +24,17 @@ test("la solicitud de llamada es la misma ficha visible en ambos tableros", () =
   const ready = lead("AI_CALL_REQUESTED", "AI")
   assert.equal(leadColumnKey(ready, "LUCAS"), "LUCAS_READY")
   assert.equal(leadColumnKey(ready, "SALES"), "SALES_INBOX")
+})
+
+test("lead entrante de Ventas es espejo exacto de listo para llamada", () => {
+  assert.equal(leadColumnKey(lead("AI_CALL_REQUESTED", "AI"), "SALES"), "SALES_INBOX")
+  assert.equal(leadColumnKey(lead("HUMAN_NEW", "HUMAN"), "SALES"), "SALES_CONTACTED")
+  assert.equal(leadColumnKey(lead("HUMAN_CONTACTING", "HUMAN"), "SALES"), "SALES_CONTACTED")
+})
+
+test("un lead ya tomado no puede volver a la cola compartida", () => {
+  assert.equal(salesSelectValue(lead("HUMAN_NEW", "HUMAN")), "HUMAN_CONTACTING")
+  assert.equal(SALES_MOVE_TARGETS.some((target) => target.stage === "HUMAN_NEW"), false)
 })
 
 test("un lead humano no vuelve a Lucas", () => {
