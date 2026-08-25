@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { columnsForBoard, defaultCrmBoardColumns, leadColumnKey, SALES_MOVE_TARGETS, salesSelectValue } from "../lib/crm-board-model.ts"
+import { columnsForBoard, defaultCrmBoardColumns, leadColumnKey, SALES_MOVE_TARGETS, salesDropStage, salesSelectValue } from "../lib/crm-board-model.ts"
 import type { CrmLeadDTO } from "../lib/crm-model.ts"
 
 function lead(stage: CrmLeadDTO["stage"], authority: CrmLeadDTO["authority"]): CrmLeadDTO {
@@ -41,4 +41,13 @@ test("tomar no equivale a contactar", () => {
 
 test("un lead humano no vuelve a Lucas", () => {
   assert.equal(leadColumnKey(lead("HUMAN_NEW", "HUMAN"), "LUCAS"), null)
+})
+
+test("cada columna humana tiene una etapa determinista para soltar tarjetas", () => {
+  assert.equal(salesDropStage("SALES_INBOX"), null)
+  assert.equal(salesDropStage("SALES_TAKEN"), "HUMAN_NEW")
+  assert.equal(salesDropStage("SALES_CONTACTED"), "HUMAN_CONTACTING")
+  assert.equal(salesDropStage("SALES_MANAGING"), "HUMAN_NEGOTIATION")
+  assert.equal(salesDropStage("SALES_WON"), "WON")
+  assert.equal(salesDropStage("SALES_LOST"), "LOST")
 })

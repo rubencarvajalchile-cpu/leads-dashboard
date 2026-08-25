@@ -17,3 +17,12 @@ test("el CRM no agrega accesos directos a WhatsApp", () => {
     assert.doesNotMatch(source, /wa\.me|Abrir WhatsApp|> WhatsApp</)
   }
 })
+
+test("el tablero permite arrastrar y soltar leads con el mouse", () => {
+  assert.match(board, /draggable=\{board === "SALES"/)
+  assert.match(board, /onDragStart=/)
+  assert.match(board, /onDragOver=/)
+  assert.match(board, /onDrop=/)
+  assert.match(board, /dropLead\(column\.key\)/)
+  assert.match(board, /Arrastra una tarjeta a otra columna/)
+})

@@ -66,6 +66,15 @@ export const SALES_MOVE_TARGETS: readonly { stage: HumanStage; label: string }[]
   { stage: "DO_NOT_CONTACT", label: "No contactar" },
 ]
 
+export function salesDropStage(columnKey: CrmColumnKey): HumanStage | null {
+  if (columnKey === "SALES_TAKEN") return "HUMAN_NEW"
+  if (columnKey === "SALES_CONTACTED") return "HUMAN_CONTACTING"
+  if (columnKey === "SALES_MANAGING") return "HUMAN_NEGOTIATION"
+  if (columnKey === "SALES_WON") return "WON"
+  if (columnKey === "SALES_LOST") return "LOST"
+  return null
+}
+
 export function salesSelectValue(lead: CrmLeadDTO): HumanStage {
   if (lead.authority !== "HUMAN") return "HUMAN_NEW"
   if (lead.stage === "HUMAN_PROPOSAL") return "HUMAN_NEGOTIATION"

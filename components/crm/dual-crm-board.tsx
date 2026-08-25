@@ -1,14 +1,14 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
-import { ArrowLeft, ArrowRight, Bot, Check, CircleAlert, Clock3, Eye, Search, Settings2, UserRound, X } from "lucide-react"
+import { useMemo, useState, useTransition, type DragEvent } from "react"
+import { ArrowLeft, ArrowRight, Bot, Check, CircleAlert, Clock3, Eye, GripVertical, Search, Settings2, UserRound, X } from "lucide-react"
 import { moveHumanLeadAction, saveBoardColumnsAction, takeHumanLeadAction } from "@/app/dashboard/crm/actions"
 import { LeadWorkspacePanel } from "@/components/crm/lead-workspace-panel"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import {
-  SALES_MOVE_TARGETS, columnsForBoard, defaultCrmBoardColumns, leadColumnKey, salesSelectValue,
-  type CrmBoard, type CrmBoardColumnDTO,
+  SALES_MOVE_TARGETS, columnsForBoard, defaultCrmBoardColumns, leadColumnKey, salesDropStage, salesSelectValue,
+  type CrmBoard, type CrmBoardColumnDTO, type CrmColumnKey,
 } from "@/lib/crm-board-model"
 import { isTerminalStage, type CrmLeadDTO, type HumanStage } from "@/lib/crm-model"
 
@@ -65,24 +65,31 @@ function matchesSalesFocus(lead: CrmLeadDTO, focus: SalesFocus, currentUserId?: 
   return lead.priority === "P1"
 }
 
-function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open }: {
+function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open, dragStart, dragEnd }: {
   lead: CrmLeadDTO; board: CrmBoard; busy: boolean; readOnly: boolean
   demoMode: boolean
   take: (lead: CrmLeadDTO, openAfterTaking?: boolean) => void; move: (lead: CrmLeadDTO, stage: HumanStage) => void
   open: (lead: CrmLeadDTO) => void
+  dragStart: (lead: CrmLeadDTO, event: DragEvent<HTMLElement>) => void; dragEnd: () => void
 }) {
   const pendingTakeover = board === "SALES" && lead.authority === "AI" && lead.stage === "AI_CALL_REQUESTED"
   const terminal = lead.authority === "HUMAN" && isTerminalStage(lead.stage)
   const awaitingFirstContact = board === "SALES" && lead.authority === "HUMAN" && lead.stage === "HUMAN_NEW"
   const task = lead.nextTask
   return (
-    <article className="rounded-xl border border-[#373c35] bg-[#222620] p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.12)]">
+    <article draggable={board === "SALES" && !readOnly && !busy && !terminal}
+      onDragStart={(event) => dragStart(lead, event)} onDragEnd={dragEnd}
+      title={board === "SALES" && !terminal ? "Arrastra esta tarjeta para cambiarla de etapa" : undefined}
+      className={`rounded-xl border border-[#373c35] bg-[#222620] p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.12)] ${board === "SALES" && !readOnly && !busy && !terminal ? "cursor-grab active:cursor-grabbing" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-medium text-[#ecece7]">{lead.contactName}</p>
           <p className="mt-1 text-xs text-[#7f8981]">Prioridad {lead.priority}</p>
         </div>
-        {lead.authority === "AI" ? <Bot className="h-4 w-4 text-[#7aab8d]" /> : <UserRound className="h-4 w-4 text-[#8b91bd]" />}
+        <div className="flex items-center gap-1.5">
+          {board === "SALES" && !readOnly && !busy && !terminal && <GripVertical aria-label="Arrastrar lead" className="h-4 w-4 text-[#626b63]" />}
+          {lead.authority === "AI" ? <Bot className="h-4 w-4 text-[#7aab8d]" /> : <UserRound className="h-4 w-4 text-[#8b91bd]" />}
+        </div>
       </div>
       {lead.productInterest && <p className="mt-3 text-xs leading-5 text-[#aab1aa]">{lead.productInterest}</p>}
       {lead.stage === "DO_NOT_CONTACT" && <span className="mt-3 inline-flex rounded-full bg-[#4a2b2b] px-2 py-1 text-[10px] font-semibold uppercase text-[#e4a2a2]">No contactar</span>}
@@ -133,6 +140,8 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
   const [selectedLead, setSelectedLead] = useState<CrmLeadDTO | null>(null)
   const [search, setSearch] = useState("")
   const [salesFocus, setSalesFocus] = useState<SalesFocus>("ALL")
+  const [draggingLeadId, setDraggingLeadId] = useState<string | null>(null)
+  const [dragOverColumn, setDragOverColumn] = useState<CrmColumnKey | null>(null)
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
   const visibleColumns = useMemo(() => columnsForBoard(draft ?? columns, board), [board, columns, draft])
@@ -196,6 +205,45 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
     setSelectedLead((current) => current?.id === leadId
       ? { ...current, stage: "HUMAN_CONTACTING", updatedAt: now }
       : current)
+  }
+
+  const startDragging = (lead: CrmLeadDTO, event: DragEvent<HTMLElement>) => {
+    if (board !== "SALES" || readOnly || isTerminalStage(lead.stage)) {
+      event.preventDefault()
+      return
+    }
+    event.dataTransfer.effectAllowed = "move"
+    event.dataTransfer.setData("text/plain", lead.id)
+    setDraggingLeadId(lead.id)
+  }
+
+  const stopDragging = () => {
+    setDraggingLeadId(null)
+    setDragOverColumn(null)
+  }
+
+  const canDropOn = (columnKey: CrmColumnKey) => {
+    const lead = salesLeads.find((item) => item.id === draggingLeadId)
+    if (!lead || readOnly || isTerminalStage(lead.stage)) return false
+    if (lead.authority === "AI") return lead.stage === "AI_CALL_REQUESTED" && columnKey === "SALES_TAKEN"
+    return salesDropStage(columnKey) !== null
+  }
+
+  const dropLead = (columnKey: CrmColumnKey) => {
+    const lead = salesLeads.find((item) => item.id === draggingLeadId)
+    stopDragging()
+    if (!lead || readOnly || leadColumnKey(lead, "SALES") === columnKey) return
+    if (lead.authority === "AI") {
+      if (columnKey === "SALES_TAKEN" && lead.stage === "AI_CALL_REQUESTED") take(lead)
+      else toast({ title: "Primero arrastra este lead a Derivado a humano.", variant: "destructive" })
+      return
+    }
+    const nextStage = salesDropStage(columnKey)
+    if (!nextStage) {
+      toast({ title: "Un lead humano no puede volver a la bandeja de Lucas.", variant: "destructive" })
+      return
+    }
+    move(lead, nextStage)
   }
 
   const updateDraft = (key: string, patch: Partial<CrmBoardColumnDTO>) =>
@@ -272,6 +320,9 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
             : salesCounts.noContact > 0 ? `${salesCounts.noContact} lead${salesCounts.noContact === 1 ? "" : "s"} bajo atención humana todavía no tiene${salesCounts.noContact === 1 ? "" : "n"} un contacto registrado.`
               : "No hay una acción urgente en la cola de Ventas."}
         </p>}
+        {board === "SALES" && !readOnly && <p className="mt-2 flex items-center gap-2 text-xs text-[#737d75]">
+          <GripVertical className="h-3.5 w-3.5" /> Arrastra una tarjeta a otra columna para cambiar su etapa.
+        </p>}
       </section>
 
       {draft && (
@@ -297,10 +348,15 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
         <div className={`grid gap-4 ${board === "LUCAS" ? "min-w-[860px] grid-cols-3" : "min-w-[1480px] grid-cols-6"}`}>
           {visibleColumns.map((column) => {
             const items = leads.filter((lead) => leadColumnKey(lead, board) === column.key)
-            return <section key={column.key} className="overflow-hidden rounded-2xl border border-[#343831] bg-[#1d201c]">
+            const acceptsDrop = board === "SALES" && canDropOn(column.key)
+            return <section key={column.key}
+              onDragEnter={() => { if (acceptsDrop) setDragOverColumn(column.key) }}
+              onDragOver={(event) => { if (acceptsDrop) { event.preventDefault(); event.dataTransfer.dropEffect = "move" } }}
+              onDrop={(event) => { event.preventDefault(); dropLead(column.key) }}
+              className={`overflow-hidden rounded-2xl border bg-[#1d201c] transition-colors ${dragOverColumn === column.key && acceptsDrop ? "border-[#79a786] bg-[#202b22] ring-2 ring-[#557763]" : "border-[#343831]"}`}>
               <div className="h-1" style={{ backgroundColor: column.color }} />
               <header className="flex items-center justify-between border-b border-[#343831] px-4 py-3.5"><div><h2 className="text-sm font-medium text-[#d7d9d3]">{column.label}</h2>{board === "LUCAS" && <p className="mt-1 text-[10px] uppercase tracking-wider text-[#6f7d72]">Automático</p>}</div><span className="rounded-full bg-[#292e28] px-2 py-0.5 text-xs text-[#9ca49d]">{items.length}</span></header>
-              <div className="min-h-[260px] space-y-3 p-3">{items.length === 0 && <p className="px-2 py-8 text-center text-xs text-[#697169]">Sin leads en esta etapa</p>}{items.map((lead) => <LeadCard key={lead.id} lead={lead} board={board} busy={isPending && pendingId === lead.id} readOnly={readOnly} demoMode={demoMode} take={take} move={move} open={setSelectedLead} />)}</div>
+              <div className="min-h-[260px] space-y-3 p-3">{items.length === 0 && <p className="px-2 py-8 text-center text-xs text-[#697169]">{dragOverColumn === column.key && acceptsDrop ? "Suelta el lead aquí" : "Sin leads en esta etapa"}</p>}{items.map((lead) => <LeadCard key={lead.id} lead={lead} board={board} busy={isPending && pendingId === lead.id} readOnly={readOnly} demoMode={demoMode} take={take} move={move} open={setSelectedLead} dragStart={startDragging} dragEnd={stopDragging} />)}</div>
             </section>
           })}
         </div>
