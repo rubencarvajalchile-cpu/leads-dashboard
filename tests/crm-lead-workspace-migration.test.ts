@@ -6,6 +6,11 @@ const migration = readFileSync(
   new URL("../supabase/migrations/202608250006_crm_lead_workspace.sql", import.meta.url),
   "utf8",
 )
+const commercialMigration = readFileSync(
+  new URL("../supabase/migrations/202608250009_crm_commercial_profile.sql", import.meta.url),
+  "utf8",
+)
+const server = readFileSync(new URL("../lib/crm/server.ts", import.meta.url), "utf8")
 
 test("el contacto humano se registra mediante una única frontera auditada", () => {
   assert.match(migration, /create or replace function public\.crm_record_human_contact/)
@@ -40,4 +45,22 @@ test("la nota de contacto queda separada de la telemetría de actividad", () => 
   assert.match(migration, /insert into public\.crm_notes/)
   assert.match(migration, /'note_recorded', v_note is not null/)
   assert.doesNotMatch(migration, /jsonb_build_object\([\s\S]*p_note/)
+})
+
+test("la ficha comercial lee hechos reales mediante una frontera autenticada", () => {
+  assert.match(commercialMigration, /create or replace function public\.crm_get_lead_commercial_profile/)
+  assert.match(commercialMigration, /security definer/)
+  assert.match(commercialMigration, /crm_is_org_member\(v_organization_id\)/)
+  assert.match(commercialMigration, /v_legacy_table = 'clientes agente test'/)
+  assert.match(commercialMigration, /source\.comuna/)
+  assert.match(commercialMigration, /source\.consumo_clp/)
+  assert.match(commercialMigration, /source\.propietario/)
+  assert.match(commercialMigration, /source\.tipo_techo/)
+  assert.match(commercialMigration, /grant execute on function public\.crm_get_lead_commercial_profile\(uuid\) to authenticated/)
+  assert.doesNotMatch(commercialMigration, /grant select on .*clientes agente test/)
+})
+
+test("el servidor carga el perfil comercial junto con la ficha", () => {
+  assert.match(server, /supabase\.rpc\("crm_get_lead_commercial_profile"/)
+  assert.match(server, /commercialProfile:/)
 })

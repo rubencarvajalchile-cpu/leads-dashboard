@@ -25,3 +25,13 @@ test("el tablero permite arrastrar y soltar leads con el mouse", () => {
   assert.match(board, /dropLead\(column\.key\)/)
   assert.match(board, /Arrastra una tarjeta a otra columna/)
 })
+
+test("la ficha muestra la información comercial capturada por Lucas", () => {
+  assert.match(workspace, /Información comercial de Lucas/)
+  assert.match(workspace, /Comuna/)
+  assert.match(workspace, /Consumo mensual/)
+  assert.match(workspace, /Es propietario/)
+  assert.match(workspace, /Tipo de techo/)
+  assert.match(workspace, /Acepta llamada/)
+  assert.doesNotMatch(workspace, /Comuna, techo, consumo y conversación aún no se guardan/)
+})

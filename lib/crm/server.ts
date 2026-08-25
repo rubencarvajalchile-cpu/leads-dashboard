@@ -10,7 +10,7 @@ import {
   type CrmColumnKey,
 } from "@/lib/crm-board-model"
 import type { CrmLeadDTO, HumanStage } from "@/lib/crm-model"
-import type { CrmActivityDTO, CrmLeadWorkspaceDTO, CrmTaskStatus } from "@/lib/crm-workspace-model"
+import type { CrmActivityDTO, CrmCommercialProfileDTO, CrmLeadWorkspaceDTO, CrmTaskStatus } from "@/lib/crm-workspace-model"
 
 interface CrmLeadRow {
   id: string
@@ -272,7 +272,8 @@ export async function getCrmLeadWorkspace(leadId: string): Promise<CrmLeadWorksp
   if (error || !data) throw new Error(`CRM_WORKSPACE_READ_FAILED:${error?.code ?? "NOT_FOUND"}`)
 
   const row = data as CrmLeadWorkspaceRow
-  const [activitiesResult, notesResult, tasksResult] = await Promise.all([
+  const [commercialResult, activitiesResult, notesResult, tasksResult] = await Promise.all([
+    supabase.rpc("crm_get_lead_commercial_profile", { p_lead_id: leadId }),
     supabase.from("crm_activities")
       .select("id, actor_type, event_type, from_stage, to_stage, payload, created_at")
       .eq("lead_id", leadId).order("created_at", { ascending: false }).limit(40),
@@ -283,7 +284,7 @@ export async function getCrmLeadWorkspace(leadId: string): Promise<CrmLeadWorksp
       .select("id, title, due_at, status, created_at, updated_at")
       .eq("lead_id", leadId).order("due_at", { ascending: true, nullsFirst: false }).limit(40),
   ])
-  if (activitiesResult.error || notesResult.error || tasksResult.error) {
+  if (commercialResult.error || activitiesResult.error || notesResult.error || tasksResult.error) {
     throw new Error("CRM_WORKSPACE_TIMELINE_READ_FAILED")
   }
 
@@ -292,6 +293,9 @@ export async function getCrmLeadWorkspace(leadId: string): Promise<CrmLeadWorksp
     qualificationStatus: row.qualification_status,
     humanTakenAt: row.human_taken_at,
     createdAt: row.created_at,
+    commercialProfile: Object.keys((commercialResult.data ?? {}) as Record<string, unknown>).length > 0
+      ? commercialResult.data as CrmCommercialProfileDTO
+      : null,
     activities: ((activitiesResult.data ?? []) as CrmActivityRow[]).map((activity) => ({
       id: String(activity.id), actorType: activity.actor_type, eventType: activity.event_type,
       fromStage: activity.from_stage, toStage: activity.to_stage,

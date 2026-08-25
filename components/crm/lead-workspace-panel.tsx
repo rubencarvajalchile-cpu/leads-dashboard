@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import type { CrmLeadDTO } from "@/lib/crm-model"
-import type { CrmLeadWorkspaceDTO } from "@/lib/crm-workspace-model"
+import type { CrmCommercialProfileDTO, CrmLeadWorkspaceDTO } from "@/lib/crm-workspace-model"
 
 interface Props {
   lead: CrmLeadDTO | null
@@ -24,6 +24,27 @@ interface Props {
 function formatDate(value: string | null) {
   if (!value) return "Sin fecha"
   return new Intl.DateTimeFormat("es-CL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value))
+}
+
+function yesNo(value: boolean | null) {
+  if (value === null) return "Sin dato"
+  return value ? "Sí" : "No"
+}
+
+function commercialText(value: string | null) {
+  return value?.trim() || "Sin dato"
+}
+
+function consumption(profile: CrmCommercialProfileDTO) {
+  if (profile.monthlyConsumptionClp !== null) {
+    return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 })
+      .format(profile.monthlyConsumptionClp)
+  }
+  return commercialText(profile.consumptionRange)
+}
+
+function CommercialField({ label, value }: { label: string; value: string }) {
+  return <div><p className="text-xs text-[#7f8981]">{label}</p><p className="mt-1 break-words text-[#d8dcd5]">{value}</p></div>
 }
 
 function toLocalInput(value: Date) {
@@ -178,7 +199,35 @@ function LeadWorkspaceContent({ lead, readOnly = false, onClose, onContactRecord
               <div><p className="text-xs text-[#7f8981]">Interés</p><p className="mt-1 text-[#d8dcd5]">{lead.productInterest ?? "Sin dato"}</p></div>
               <div><p className="text-xs text-[#7f8981]">Calificación</p><p className="mt-1 text-[#d8dcd5]">{workspace?.qualificationStatus ?? "Sin dato"}</p></div>
               <div><p className="text-xs text-[#7f8981]">Última actualización</p><p className="mt-1 text-[#d8dcd5]">{formatDate(lead.updatedAt)}</p></div>
-              <div className="col-span-2"><p className="text-xs text-[#7f8981]">Datos técnicos</p><p className="mt-1 text-[#b1b8b0]">Comuna, techo, consumo y conversación aún no se guardan en este CRM.</p></div>
+            </section>
+
+            <section className="rounded-xl border border-[#3c493d] bg-[#1d251e] p-4">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8cb393]">Información comercial de Lucas</p><p className="mt-1 text-xs text-[#778078]">Datos capturados durante la conversación de WhatsApp.</p></div>
+                {workspace?.commercialProfile?.sourceUpdatedAt && <p className="text-right text-[10px] text-[#6f786f]">Actualizado<br />{formatDate(workspace.commercialProfile.sourceUpdatedAt)}</p>}
+              </div>
+              {workspace?.commercialProfile ? <>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4 text-sm">
+                  <CommercialField label="Comuna" value={commercialText(workspace.commercialProfile.commune)} />
+                  <CommercialField label="Consumo mensual" value={consumption(workspace.commercialProfile)} />
+                  <CommercialField label="Es propietario" value={yesNo(workspace.commercialProfile.owner)} />
+                  <CommercialField label="Tipo de techo" value={commercialText(workspace.commercialProfile.roofType)} />
+                  <CommercialField label="Tipo de vivienda" value={commercialText(workspace.commercialProfile.homeType)} />
+                  <CommercialField label="Tipo de proyecto" value={commercialText(workspace.commercialProfile.projectType)} />
+                  <CommercialField label="Interés confirmado" value={yesNo(workspace.commercialProfile.interested)} />
+                  <CommercialField label="Califica" value={yesNo(workspace.commercialProfile.qualified)} />
+                  <CommercialField label="Acepta llamada" value={yesNo(workspace.commercialProfile.acceptsCall)} />
+                  <CommercialField label="Urgencia" value={commercialText(workspace.commercialProfile.urgency)} />
+                  <CommercialField label="Día preferido" value={commercialText(workspace.commercialProfile.preferredDay)} />
+                  <CommercialField label="Horario preferido" value={commercialText(workspace.commercialProfile.preferredTime)} />
+                  <CommercialField label="Fase de Lucas" value={commercialText(workspace.commercialProfile.phase)} />
+                  <CommercialField label="Dato pendiente" value={commercialText(workspace.commercialProfile.missingField)} />
+                  <CommercialField label="Cotiza otras opciones" value={yesNo(workspace.commercialProfile.quotingOthers)} />
+                  <CommercialField label="Interés alto" value={yesNo(workspace.commercialProfile.enthusiastic)} />
+                  <CommercialField label="Pidió reunión" value={yesNo(workspace.commercialProfile.requestedMeeting)} />
+                </div>
+                {workspace.commercialProfile.handoffReason && <div className="mt-4 border-t border-[#39423a] pt-3"><CommercialField label="Motivo de derivación" value={workspace.commercialProfile.handoffReason} /></div>}
+              </> : <p className="text-sm text-[#858e86]">Este lead todavía no tiene información comercial registrada por Lucas.</p>}
             </section>
 
             <section className="rounded-xl border border-[#4b594b] bg-[#1e291f] p-4">
