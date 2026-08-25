@@ -8,10 +8,10 @@ function lead(stage: CrmLeadDTO["stage"], authority: CrmLeadDTO["authority"]): C
     productInterest: null, priority: "P3", assignedTo: null, updatedAt: "2026-08-25T12:00:00.000Z" }
 }
 
-test("expone tres columnas Lucas y cinco Ventas", () => {
+test("expone tres columnas Lucas y seis Ventas", () => {
   const columns = defaultCrmBoardColumns()
   assert.equal(columnsForBoard(columns, "LUCAS").length, 3)
-  assert.equal(columnsForBoard(columns, "SALES").length, 5)
+  assert.equal(columnsForBoard(columns, "SALES").length, 6)
 })
 
 test("agrupa etapas sin perder semántica", () => {
@@ -26,9 +26,9 @@ test("la solicitud de llamada es la misma ficha visible en ambos tableros", () =
   assert.equal(leadColumnKey(ready, "SALES"), "SALES_INBOX")
 })
 
-test("lead entrante de Ventas recibe listos para llamada y conserva tomados sin contacto", () => {
+test("lead entrante de Ventas es espejo exacto de listo para llamada", () => {
   assert.equal(leadColumnKey(lead("AI_CALL_REQUESTED", "AI"), "SALES"), "SALES_INBOX")
-  assert.equal(leadColumnKey(lead("HUMAN_NEW", "HUMAN"), "SALES"), "SALES_INBOX")
+  assert.equal(leadColumnKey(lead("HUMAN_NEW", "HUMAN"), "SALES"), "SALES_TAKEN")
   assert.equal(leadColumnKey(lead("HUMAN_CONTACTING", "HUMAN"), "SALES"), "SALES_CONTACTED")
 })
 

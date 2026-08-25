@@ -190,7 +190,7 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
       )}
 
       <div className="overflow-x-auto pb-4">
-        <div className={`grid gap-4 ${board === "LUCAS" ? "min-w-[860px] grid-cols-3" : "min-w-[1240px] grid-cols-5"}`}>
+        <div className={`grid gap-4 ${board === "LUCAS" ? "min-w-[860px] grid-cols-3" : "min-w-[1480px] grid-cols-6"}`}>
           {visibleColumns.map((column) => {
             const items = leads.filter((lead) => leadColumnKey(lead, board) === column.key)
             return <section key={column.key} className="overflow-hidden rounded-2xl border border-[#343831] bg-[#1d201c]">

@@ -3,7 +3,7 @@ import type { CrmLeadDTO, HumanStage } from "@/lib/crm-model"
 export const CRM_BOARDS = ["LUCAS", "SALES"] as const
 export const CRM_COLUMN_KEYS = [
   "LUCAS_INBOX", "LUCAS_QUALIFYING", "LUCAS_READY",
-  "SALES_INBOX", "SALES_CONTACTED", "SALES_MANAGING", "SALES_WON", "SALES_LOST",
+  "SALES_INBOX", "SALES_TAKEN", "SALES_CONTACTED", "SALES_MANAGING", "SALES_WON", "SALES_LOST",
 ] as const
 
 export type CrmBoard = (typeof CRM_BOARDS)[number]
@@ -22,10 +22,11 @@ const DEFAULT_COLUMNS: readonly CrmBoardColumnDTO[] = [
   { board: "LUCAS", key: "LUCAS_QUALIFYING", label: "Calificando", color: "#b69052", position: 1 },
   { board: "LUCAS", key: "LUCAS_READY", label: "Listo para llamada", color: "#6e8fba", position: 2 },
   { board: "SALES", key: "SALES_INBOX", label: "Lead entrante", color: "#6e8fba", position: 0 },
-  { board: "SALES", key: "SALES_CONTACTED", label: "Contactado", color: "#8c7db5", position: 1 },
-  { board: "SALES", key: "SALES_MANAGING", label: "En gestión", color: "#b69052", position: 2 },
-  { board: "SALES", key: "SALES_WON", label: "Ganado", color: "#5f9f78", position: 3 },
-  { board: "SALES", key: "SALES_LOST", label: "Perdido", color: "#9b6969", position: 4 },
+  { board: "SALES", key: "SALES_TAKEN", label: "Tomado · pendiente de contacto", color: "#a47f47", position: 1 },
+  { board: "SALES", key: "SALES_CONTACTED", label: "Contactado", color: "#8c7db5", position: 2 },
+  { board: "SALES", key: "SALES_MANAGING", label: "En gestión", color: "#b69052", position: 3 },
+  { board: "SALES", key: "SALES_WON", label: "Ganado", color: "#5f9f78", position: 4 },
+  { board: "SALES", key: "SALES_LOST", label: "Perdido", color: "#9b6969", position: 5 },
 ]
 
 export function defaultCrmBoardColumns(): CrmBoardColumnDTO[] {
@@ -46,9 +47,9 @@ export function leadColumnKey(lead: CrmLeadDTO, board: CrmBoard): CrmColumnKey |
   }
 
   if (lead.authority === "AI") return lead.stage === "AI_CALL_REQUESTED" ? "SALES_INBOX" : null
-  // A takeover changes authority, not contact status. HUMAN_NEW remains in
-  // the Sales inbox until the seller explicitly records first contact.
-  if (lead.stage === "HUMAN_NEW") return "SALES_INBOX"
+  // A takeover changes authority, not contact status. Keep it separate from
+  // both the mirrored incoming queue and the explicitly contacted stage.
+  if (lead.stage === "HUMAN_NEW") return "SALES_TAKEN"
   if (lead.stage === "HUMAN_CONTACTING") return "SALES_CONTACTED"
   if (lead.stage === "HUMAN_PROPOSAL" || lead.stage === "HUMAN_NEGOTIATION") return "SALES_MANAGING"
   if (lead.stage === "WON") return "SALES_WON"
@@ -57,7 +58,7 @@ export function leadColumnKey(lead: CrmLeadDTO, board: CrmBoard): CrmColumnKey |
 }
 
 export const SALES_MOVE_TARGETS: readonly { stage: HumanStage; label: string }[] = [
-  { stage: "HUMAN_NEW", label: "Lead entrante" },
+  { stage: "HUMAN_NEW", label: "Tomado · pendiente de contacto" },
   { stage: "HUMAN_CONTACTING", label: "Contactado" },
   { stage: "HUMAN_NEGOTIATION", label: "En gestión" },
   { stage: "WON", label: "Ganado" },
