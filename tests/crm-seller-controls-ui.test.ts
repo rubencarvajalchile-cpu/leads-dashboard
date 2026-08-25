@@ -19,10 +19,9 @@ test("el CRM no agrega accesos directos a WhatsApp", () => {
 })
 
 test("el tablero permite arrastrar y soltar leads con el mouse", () => {
-  assert.match(board, /draggable=\{board === "SALES"/)
-  assert.match(board, /onDragStart=/)
-  assert.match(board, /onDragOver=/)
-  assert.match(board, /onDrop=/)
+  assert.match(board, /onMouseDown=/)
+  assert.match(board, /onMouseEnter=/)
+  assert.match(board, /onMouseUp=/)
   assert.match(board, /dropLead\(column\.key\)/)
   assert.match(board, /Arrastra una tarjeta a otra columna/)
 })

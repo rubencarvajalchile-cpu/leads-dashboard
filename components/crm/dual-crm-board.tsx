@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition, type DragEvent } from "react"
+import { useMemo, useState, useTransition } from "react"
 import { ArrowLeft, ArrowRight, Bot, Check, CircleAlert, Clock3, Eye, GripVertical, Search, Settings2, UserRound, X } from "lucide-react"
 import { moveHumanLeadAction, saveBoardColumnsAction, takeHumanLeadAction } from "@/app/dashboard/crm/actions"
 import { LeadWorkspacePanel } from "@/components/crm/lead-workspace-panel"
@@ -70,17 +70,20 @@ function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open, dra
   demoMode: boolean
   take: (lead: CrmLeadDTO, openAfterTaking?: boolean) => void; move: (lead: CrmLeadDTO, stage: HumanStage) => void
   open: (lead: CrmLeadDTO) => void
-  dragStart: (lead: CrmLeadDTO, event: DragEvent<HTMLElement>) => void; dragEnd: () => void
+  dragStart: (lead: CrmLeadDTO) => void; dragEnd: () => void
 }) {
   const pendingTakeover = board === "SALES" && lead.authority === "AI" && lead.stage === "AI_CALL_REQUESTED"
   const terminal = lead.authority === "HUMAN" && isTerminalStage(lead.stage)
   const awaitingFirstContact = board === "SALES" && lead.authority === "HUMAN" && lead.stage === "HUMAN_NEW"
   const task = lead.nextTask
   return (
-    <article draggable={board === "SALES" && !readOnly && !busy && !terminal}
-      onDragStart={(event) => dragStart(lead, event)} onDragEnd={dragEnd}
+    <article onMouseDown={(event) => {
+      if ((event.target as HTMLElement).closest("button, select, input, a")) return
+      event.preventDefault()
+      dragStart(lead)
+    }} onMouseUp={dragEnd}
       title={board === "SALES" && !terminal ? "Arrastra esta tarjeta para cambiarla de etapa" : undefined}
-      className={`rounded-xl border border-[#373c35] bg-[#222620] p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.12)] ${board === "SALES" && !readOnly && !busy && !terminal ? "cursor-grab active:cursor-grabbing" : ""}`}>
+      className={`select-none rounded-xl border border-[#373c35] bg-[#222620] p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.12)] ${board === "SALES" && !readOnly && !busy && !terminal ? "cursor-grab active:cursor-grabbing" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-medium text-[#ecece7]">{lead.contactName}</p>
@@ -207,13 +210,10 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
       : current)
   }
 
-  const startDragging = (lead: CrmLeadDTO, event: DragEvent<HTMLElement>) => {
+  const startDragging = (lead: CrmLeadDTO) => {
     if (board !== "SALES" || readOnly || isTerminalStage(lead.stage)) {
-      event.preventDefault()
       return
     }
-    event.dataTransfer.effectAllowed = "move"
-    event.dataTransfer.setData("text/plain", lead.id)
     setDraggingLeadId(lead.id)
   }
 
@@ -350,9 +350,8 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
             const items = leads.filter((lead) => leadColumnKey(lead, board) === column.key)
             const acceptsDrop = board === "SALES" && canDropOn(column.key)
             return <section key={column.key}
-              onDragEnter={() => { if (acceptsDrop) setDragOverColumn(column.key) }}
-              onDragOver={(event) => { if (acceptsDrop) { event.preventDefault(); event.dataTransfer.dropEffect = "move" } }}
-              onDrop={(event) => { event.preventDefault(); dropLead(column.key) }}
+              onMouseEnter={() => { if (acceptsDrop) setDragOverColumn(column.key) }}
+              onMouseUp={() => dropLead(column.key)}
               className={`overflow-hidden rounded-2xl border bg-[#1d201c] transition-colors ${dragOverColumn === column.key && acceptsDrop ? "border-[#79a786] bg-[#202b22] ring-2 ring-[#557763]" : "border-[#343831]"}`}>
               <div className="h-1" style={{ backgroundColor: column.color }} />
               <header className="flex items-center justify-between border-b border-[#343831] px-4 py-3.5"><div><h2 className="text-sm font-medium text-[#d7d9d3]">{column.label}</h2>{board === "LUCAS" && <p className="mt-1 text-[10px] uppercase tracking-wider text-[#6f7d72]">Automático</p>}</div><span className="rounded-full bg-[#292e28] px-2 py-0.5 text-xs text-[#9ca49d]">{items.length}</span></header>
