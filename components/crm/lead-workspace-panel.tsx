@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CalendarClock, CheckCircle2, ClipboardList, FileText, LoaderCircle, Phone, StickyNote, X } from "lucide-react"
+import { CalendarClock, CheckCircle2, ClipboardList, FileText, LoaderCircle, StickyNote, X } from "lucide-react"
 import {
   addLeadNoteAction,
   completeLeadTaskAction,
@@ -174,7 +174,7 @@ function LeadWorkspaceContent({ lead, readOnly = false, onClose, onContactRecord
         <div className="space-y-7 p-6">
           {loading && !workspace ? <div className="flex items-center gap-2 text-sm text-[#9ea69d]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando ficha…</div> : <>
             <section className="grid grid-cols-2 gap-3 rounded-xl border border-[#363d35] bg-[#20241f] p-4 text-sm">
-              <div><p className="text-xs text-[#7f8981]">Teléfono</p>{lead.phoneE164 ? <a className="mt-1 inline-flex items-center gap-1 text-[#8fc6a0]" href={`https://wa.me/${lead.phoneE164.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"><Phone className="h-3.5 w-3.5" /> Abrir WhatsApp</a> : <p className="mt-1 text-[#d8dcd5]">Sin dato</p>}</div>
+              <div><p className="text-xs text-[#7f8981]">Teléfono</p><p className="mt-1 text-[#d8dcd5]">{lead.phoneE164 ?? "Sin dato"}</p></div>
               <div><p className="text-xs text-[#7f8981]">Interés</p><p className="mt-1 text-[#d8dcd5]">{lead.productInterest ?? "Sin dato"}</p></div>
               <div><p className="text-xs text-[#7f8981]">Calificación</p><p className="mt-1 text-[#d8dcd5]">{workspace?.qualificationStatus ?? "Sin dato"}</p></div>
               <div><p className="text-xs text-[#7f8981]">Última actualización</p><p className="mt-1 text-[#d8dcd5]">{formatDate(lead.updatedAt)}</p></div>

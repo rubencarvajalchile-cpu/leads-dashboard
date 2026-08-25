@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Bot, Phone, RotateCcw, UserRound } from "lucide-react"
+import { Bot, RotateCcw, UserRound } from "lucide-react"
 import {
   moveHumanLeadAction,
   returnLeadToAiAction,
@@ -160,12 +160,6 @@ export function HumanCrmBoard({ initialLeads, initialTakeoverQueue, readOnly = f
                       </div>
 
                       {lead.productInterest && <p className="mt-3 text-xs leading-5 text-[#aab1aa]">{lead.productInterest}</p>}
-
-                      {lead.phoneE164 && (
-                        <a className="mt-3 flex items-center gap-1.5 text-xs text-[#80b395]" href={`https://wa.me/${lead.phoneE164.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                          <Phone className="h-3.5 w-3.5" /> WhatsApp
-                        </a>
-                      )}
 
                       <label className="mt-4 block text-[11px] uppercase tracking-wide text-[#727b73]">
                         Mover a

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
-import { ArrowLeft, ArrowRight, Bot, Check, CircleAlert, Clock3, Eye, Phone, Search, Settings2, UserRound, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, Bot, Check, CircleAlert, Clock3, Eye, Search, Settings2, UserRound, X } from "lucide-react"
 import { moveHumanLeadAction, saveBoardColumnsAction, takeHumanLeadAction } from "@/app/dashboard/crm/actions"
 import { LeadWorkspacePanel } from "@/components/crm/lead-workspace-panel"
 import { Button } from "@/components/ui/button"
@@ -97,11 +97,6 @@ function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open }: {
           <p className="mt-1 truncate">{task.title} · {taskTiming(task.dueAt)}</p>
         </div>
       )}
-      {lead.phoneE164 && board === "SALES" && lead.authority === "HUMAN" && (
-        <a className="mt-3 flex items-center gap-1.5 text-xs text-[#80b395]" href={`https://wa.me/${lead.phoneE164.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-          <Phone className="h-3.5 w-3.5" /> Abrir WhatsApp
-        </a>
-      )}
       {pendingTakeover && (
         <div className="mt-4 border-t border-[#343831] pt-3">
           <p className="mb-2 text-[11px] leading-4 text-[#9da79f]">Listo para llamada. Lucas conserva el control hasta que una persona lo tome.</p>
@@ -110,15 +105,7 @@ function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open }: {
           </Button>
         </div>
       )}
-      {awaitingFirstContact && (
-        <div className="mt-4 border-t border-[#343831] pt-3">
-          <p className="mb-2 text-[11px] leading-4 text-[#9da79f]">Primero conversa con el cliente y registra ese primer contacto desde su ficha.</p>
-          <Button type="button" size="sm" disabled={readOnly || demoMode} onClick={() => open(lead)} className="w-full">
-            <Check className="h-3.5 w-3.5" /> Registrar primer contacto
-          </Button>
-        </div>
-      )}
-      {board === "SALES" && lead.authority === "HUMAN" && !awaitingFirstContact && !terminal && (
+      {board === "SALES" && lead.authority === "HUMAN" && !terminal && (
         <label className="mt-4 block border-t border-[#343831] pt-3 text-[11px] uppercase tracking-wide text-[#727b73]">
           Etapa comercial
           <select value={salesSelectValue(lead)} disabled={readOnly || busy || terminal}
@@ -128,7 +115,7 @@ function LeadCard({ lead, board, busy, readOnly, demoMode, take, move, open }: {
           </select>
         </label>
       )}
-      {!pendingTakeover && !awaitingFirstContact && <Button type="button" size="sm" variant={terminal ? "ghost" : "outline"} disabled={demoMode} title={demoMode ? "La ficha operativa está disponible al ingresar al CRM." : undefined}
+      {!pendingTakeover && <Button type="button" size="sm" variant={terminal ? "ghost" : "outline"} disabled={demoMode} title={demoMode ? "La ficha operativa está disponible al ingresar al CRM." : undefined}
         onClick={() => open(lead)} className="mt-3 w-full text-[#b9c4b8]">
         <Eye className="h-3.5 w-3.5" /> {terminal ? "Ver ficha" : "Abrir ficha"}
       </Button>}
