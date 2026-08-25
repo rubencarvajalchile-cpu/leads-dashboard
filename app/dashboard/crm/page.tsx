@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { HumanCrmBoard } from "@/components/crm/human-crm-board"
-import { isCrmEnabled, listHumanCrmLeads, listTakeoverQueue } from "@/lib/crm/server"
+import { DualCrmBoard } from "@/components/crm/dual-crm-board"
+import { getCrmWorkspaceAccess, isCrmEnabled, listAiCrmLeads, listCrmBoardColumns, listHumanCrmLeads } from "@/lib/crm/server"
 import { createClient } from "@/lib/supabase-server"
 
 export default async function CrmPage() {
@@ -13,7 +13,10 @@ export default async function CrmPage() {
   if (!user) redirect("/")
 
   const enabled = isCrmEnabled()
-  const [leads, takeoverQueue] = enabled ? await Promise.all([listHumanCrmLeads(), listTakeoverQueue()]) : [[], []]
+  const access = enabled ? await getCrmWorkspaceAccess() : null
+  const [aiLeads, humanLeads, columns] = enabled && access
+    ? await Promise.all([listAiCrmLeads(), listHumanCrmLeads(), listCrmBoardColumns(access.organizationId)])
+    : [[], [], []]
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,16 +24,22 @@ export default async function CrmPage() {
       <main className="mx-auto max-w-[1800px] space-y-8 px-5 py-10 sm:px-8 sm:py-12">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6fa485]">Atención humana</p>
-            <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.035em] text-[#e7e8e2]">CRM comercial</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6fa485]">Marketing + ventas</p>
+            <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.035em] text-[#e7e8e2]">Dos equipos, una sola ficha</h1>
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#8d978f]">
-            Los vendedores manipulan únicamente los leads tomados por una persona. El funnel de IA permanece protegido.
+            Lucas califica automáticamente. Cuando el lead queda listo para llamada, entra a Ventas sin duplicarse y la IA deja de intervenir al tomarlo.
           </p>
         </div>
 
         {enabled ? (
-          <HumanCrmBoard initialLeads={leads} initialTakeoverQueue={takeoverQueue} />
+          <DualCrmBoard
+            initialAiLeads={aiLeads}
+            initialHumanLeads={humanLeads}
+            initialColumns={columns}
+            organizationId={access?.organizationId ?? ""}
+            canManageColumns={access?.canManageColumns ?? false}
+          />
         ) : (
           <div className="rounded-xl border border-[#3b423a] bg-[#1d201c] px-6 py-12">
             <h2 className="text-lg font-semibold text-[#e7e8e2]">CRM preparado, todavía no activado</h2>

@@ -1,8 +1,8 @@
 import { Building2, Eye } from "lucide-react"
-import { HumanCrmBoard } from "@/components/crm/human-crm-board"
+import { DualCrmBoard } from "@/components/crm/dual-crm-board"
 import type { CrmLeadDTO } from "@/lib/crm-model"
 
-const previewLeads: CrmLeadDTO[] = [
+const previewHumanLeads: CrmLeadDTO[] = [
   {
     id: "preview-human-negotiation",
     contactName: "Cliente piloto - negociación humana",
@@ -16,7 +16,17 @@ const previewLeads: CrmLeadDTO[] = [
   },
 ]
 
-const previewQueue: CrmLeadDTO[] = [
+const previewAiLeads: CrmLeadDTO[] = [
+  {
+    id: "preview-ai-new", contactName: "Camila - nuevo lead", phoneE164: null,
+    authority: "AI", stage: "AI_NEW", productInterest: "Paneles solares",
+    priority: "P3", assignedTo: null, updatedAt: "2026-08-25T12:00:00.000Z",
+  },
+  {
+    id: "preview-ai-qualifying", contactName: "Javier - calificando", phoneE164: null,
+    authority: "AI", stage: "AI_QUALIFYING", productInterest: "Evaluación residencial",
+    priority: "P2", assignedTo: null, updatedAt: "2026-08-25T12:00:00.000Z",
+  },
   {
     id: "preview-ai-call-requested",
     contactName: "Lead piloto - solicitud de llamada",
@@ -61,7 +71,8 @@ export default function CrmDemoPage() {
           </p>
         </div>
 
-        <HumanCrmBoard initialLeads={previewLeads} initialTakeoverQueue={previewQueue} readOnly />
+        <DualCrmBoard initialAiLeads={previewAiLeads} initialHumanLeads={previewHumanLeads}
+          organizationId="00000000-0000-0000-0000-000000000000" readOnly />
       </main>
     </div>
   )
