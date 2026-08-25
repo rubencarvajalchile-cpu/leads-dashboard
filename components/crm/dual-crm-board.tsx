@@ -18,6 +18,7 @@ interface Props {
   organizationId: string
   canManageColumns?: boolean
   readOnly?: boolean
+  demoMode?: boolean
 }
 
 const copy: Record<CrmBoard, { title: string; description: string }> = {
@@ -69,7 +70,7 @@ function LeadCard({ lead, board, busy, readOnly, take, move }: {
   )
 }
 
-export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns, organizationId, canManageColumns = false, readOnly = false }: Props) {
+export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns, organizationId, canManageColumns = false, readOnly = false, demoMode = false }: Props) {
   const [board, setBoard] = useState<CrmBoard>("LUCAS")
   const [aiLeads, setAiLeads] = useState(initialAiLeads)
   const [humanLeads, setHumanLeads] = useState(initialHumanLeads)
@@ -82,6 +83,12 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
   const leads = useMemo(() => board === "LUCAS" ? aiLeads : [...aiLeads, ...humanLeads], [board, aiLeads, humanLeads])
 
   const take = (lead: CrmLeadDTO) => {
+    if (demoMode) {
+      setAiLeads((items) => items.filter((item) => item.id !== lead.id))
+      setHumanLeads((items) => [{ ...lead, authority: "HUMAN", stage: "HUMAN_NEW" }, ...items])
+      toast({ title: "Lead tomado. Lucas dejó de intervenir." })
+      return
+    }
     setPendingId(lead.id)
     startTransition(async () => {
       const result = await takeHumanLeadAction({ leadId: lead.id, reason: "Toma explícita desde CRM Ventas" })
@@ -99,6 +106,10 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
   const move = (lead: CrmLeadDTO, nextStage: HumanStage) => {
     const previous = humanLeads
     setHumanLeads((items) => items.map((item) => item.id === lead.id ? { ...item, stage: nextStage } : item))
+    if (demoMode) {
+      toast({ title: "Lead movido en la demostración." })
+      return
+    }
     setPendingId(lead.id)
     startTransition(async () => {
       const result = await moveHumanLeadAction({ leadId: lead.id, nextStage })
@@ -123,6 +134,10 @@ export function DualCrmBoard({ initialAiLeads, initialHumanLeads, initialColumns
   const save = () => {
     if (!draft) return
     const scoped = columnsForBoard(draft, board)
+    if (demoMode) {
+      setColumns(draft); setDraft(null); toast({ title: "Columnas actualizadas en la demostración." })
+      return
+    }
     startTransition(async () => {
       const result = await saveBoardColumnsAction({ organizationId, board, columns: scoped })
       if (!result.ok) {

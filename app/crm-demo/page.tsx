@@ -67,12 +67,12 @@ export default function CrmDemoPage() {
             <h2 className="mt-2 text-[30px] font-semibold tracking-[-0.035em] text-[#e7e8e2]">Tablero comercial</h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#8d978f]">
-            Esta vista usa datos ficticios y no permite cambios. El tablero operativo permanece protegido por inicio de sesión.
+            Esta vista usa datos ficticios. Puedes tomar y mover leads, además de cambiar nombres, colores y orden de columnas sin afectar información real.
           </p>
         </div>
 
         <DualCrmBoard initialAiLeads={previewAiLeads} initialHumanLeads={previewHumanLeads}
-          organizationId="00000000-0000-0000-0000-000000000000" readOnly />
+          organizationId="00000000-0000-0000-0000-000000000000" canManageColumns demoMode />
       </main>
     </div>
   )
